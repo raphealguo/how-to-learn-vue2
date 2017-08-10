@@ -2,7 +2,7 @@
 
 ## 背景
 
-近期我们把微信公众平台管理端的前端框架切成MVVM架构，框架层面最终我们选择了 [Vue](https://github.com/vuejs/vue)，为了更了解Vue及可能会踩坑，阅读Vue源码是必要的。
+近期我们把微信公众平台管理端的前端框架切成MVVM架构，框架层面最终我们选择了 [Vue](https://github.com/vuejs/vue)，为了更了解Vue，阅读Vue源码是必要的。
 
 我参考的Vue版本是 [2.2.0](https://github.com/vuejs/vue/tree/v2.2.0)，整个项目的代码1万2千行，如果不搞清楚原理，直接每一行看下来肯定会漏掉不少细节，或者对作者为什么这样写代码感到莫名其妙。
 
@@ -34,3 +34,9 @@
 		(源码总共231行，[点击查看分支代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
 		
 		整个Vue的底层渲染机制是依赖VD的实现，因此先写一个极简的VD算法是非常不错的开头
+
+## 关于我
+
+博客：[http://rapheal.sinaapp.com/](http://rapheal.sinaapp.com/)
+
+微博：[@raphealguo](http://weibo.com/p/1005051628949221)
