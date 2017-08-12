@@ -140,7 +140,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode, parentElm) {
+export default function patch (oldVnode, vnode) {
   let isInitialPatch = false
 
   if (sameVnode(oldVnode, vnode)) {// 如果两个vnode节点根一致

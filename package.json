@@ -4,13 +4,17 @@
   "description": "how to learn vue2 by raphealguo",
   "main": "dist/vue.js",
   "homepage": "https://github.com/raphealguo/how-to-learn-vue2#readme",
-  "keywords":["Vue","Vue2.0", "how to learn vue"],
+  "keywords": [
+    "Vue",
+    "Vue2.0",
+    "how to learn vue"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/raphealguo/how-to-learn-vue2.git"
   },
   "author": "raphealguo",
-  "license":"MIT",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/raphealguo/how-to-learn-vue2/issues"
   },
@@ -20,8 +24,7 @@
     "babel-preset-es2015": "^6.24.1",
     "webpack": "^2.0.0"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "scripts": {
     "line": "node ./tools/line.js ./src"
   }
