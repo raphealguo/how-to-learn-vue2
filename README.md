@@ -29,10 +29,10 @@
 我会把每个章节的 **源码行数** 以及 **对应的分支** 标记出来，方便大家可以看到每次源码变更的行数。
 
 1. 第一章 构建一个简单的Vue
-	* [1.1 Virtual DOM](./1.1.md)
-		(源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
+  * [1.1 Virtual DOM](./1.1.md)
+    (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
 
-		整个Vue的底层渲染机制是依赖VD的实现，因此先写一个极简的VD算法是非常不错的开头
+    整个Vue的底层渲染机制是依赖VD的实现，因此先写一个极简的VD算法是非常不错的开头
   * [1.2 HTML parser](./1.2.md)
 
     (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2))
