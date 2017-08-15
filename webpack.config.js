@@ -1,11 +1,11 @@
 var path = require('path')
 
-module.exports = {  
-  entry: './src/entries/index.js',  
-  output: {  
-    filename: './dist/vue.js'  
-  },  
-  module: {  
+module.exports = {
+  entry: './src/entries/index.js',
+  output: {
+    filename: './dist/v1.1.js'
+  },
+  module: {
     rules: [
     {
       test: /\.js$/,
@@ -16,11 +16,11 @@ module.exports = {
         }
       }],
       include: __dirname
-    }]  
-  },  
+    }]
+  },
   resolve: {
     modules: [
       path.resolve('./src')
     ]
   }
-}  
+}
