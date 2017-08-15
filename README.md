@@ -37,7 +37,7 @@
 
   * [1.2 HTML parser](./1.2.md)
 
-    (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2))，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2)
+    (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2))
 
     每次手工构造一个 VNode 树效率非常低，而且可读性差，因此这一节会构造一个解释器，能把 HTML 字符串转化成 VNode树
 
