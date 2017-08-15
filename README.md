@@ -39,7 +39,7 @@
 
     (源码总共231行，[点击查看分支代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2))
 
-    ([点击查看在分支1.1上新增的代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2))
+    ([点击查看在分支 1.1 上新增的代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2))
 
     每次手工构造一个 VNode 树效率非常低，而且可读性差，因此这一节会构造一个解释器，能把 HTML 字符串转化成 VNode树
 
