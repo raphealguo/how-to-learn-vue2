@@ -122,6 +122,10 @@ function decode(html) {
   return decoder.textContent;
 }
 
+var isPreTag = function isPreTag(tag) {
+  return tag === 'pre';
+};
+
 /**
  * 把HTML字符串转成AST结构
  * ast = { attrsList, attrsMap, children, parent, tag, type=1 } // 非文本节点
@@ -131,6 +135,13 @@ function parse(template) {
   var stack = [];
   var root = void 0; // ast的根节点
   var currentParent = void 0; // 当前节点的父亲节点
+  var inPre = false;
+
+  function endPre(element) {
+    if (isPreTag(element.tag)) {
+      inPre = false;
+    }
+  }
 
   (0, _htmlParser.parseHTML)(template, {
     start: function start(tag, attrs, unary) {
@@ -142,6 +153,10 @@ function parse(template) {
         parent: currentParent,
         children: []
       };
+
+      if (isPreTag(element.tag)) {
+        inPre = true;
+      }
       if (!root) {
         root = element;
       }
@@ -152,17 +167,29 @@ function parse(template) {
         // 如果不是单标签，就压入堆栈
         currentParent = element;
         stack.push(element);
+      } else {
+        // 闭合一下pre标签
+        endPre(element);
       }
     },
     end: function end() {
+      var element = stack[stack.length - 1];
+      var lastNode = element.children[element.children.length - 1];
+      if (lastNode && lastNode.type === 3 && lastNode.text === ' ' && !inPre) {
+        // 把孩子节点中最后一个空白节点删掉
+        element.children.pop();
+      }
+
       stack.length -= 1;
       currentParent = stack[stack.length - 1];
+      endPre(element);
     },
     chars: function chars(text) {
       if (!currentParent) {
         return;
       }
       var children = currentParent.children;
+      text = inPre || text.trim() ? decode(text) : children.length ? ' ' : ''; // 如果文本节点为多个空格，同时所在的父亲节点含有其他孩子节点，那么要生成一个单空格的文本节点
       if (text) {
         // 文本节点
         children.push({
@@ -435,12 +462,20 @@ function patch(oldVnode, vnode) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.isUnaryTag = undefined;
+exports.isNonPhrasingTag = exports.canBeLeftOpenTag = exports.isUnaryTag = undefined;
 exports.parseHTML = parseHTML;
 
 var _util = __webpack_require__(7);
 
 var isUnaryTag = exports.isUnaryTag = (0, _util.makeMap)('area,base,br,col,embed,frame,hr,img,input,isindex,keygen,' + 'link,meta,param,source,track,wbr', true);
+
+// Elements that you can, intentionally, leave open
+// (and which close themselves)
+var canBeLeftOpenTag = exports.canBeLeftOpenTag = (0, _util.makeMap)('colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr,source', true);
+
+// HTML5 tags https://html.spec.whatwg.org/multipage/indices.html#elements-3
+// Phrasing Content https://html.spec.whatwg.org/multipage/dom.html#phrasing-content
+var isNonPhrasingTag = exports.isNonPhrasingTag = (0, _util.makeMap)('address,article,aside,base,blockquote,body,caption,col,colgroup,dd,' + 'details,dialog,div,dl,dt,fieldset,figcaption,figure,footer,form,' + 'h1,h2,h3,h4,h5,h6,head,header,hgroup,hr,html,legend,li,menuitem,meta,' + 'optgroup,option,param,rp,rt,source,style,summary,tbody,td,tfoot,th,thead,' + 'title,tr,track', true);
 
 var singleAttrIdentifier = /([^\s"'<>/=]+)/;
 var singleAttrAssign = /(?:=)/;
@@ -656,6 +691,15 @@ function parseHTML(html, options) {
     var tagName = match.tagName;
     var unarySlash = match.unarySlash;
 
+    if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
+      // p标签里边不允许嵌某些标签，如果遇到这种情况，p标签就提前闭合
+      parseEndTag(lastTag);
+    }
+    if (canBeLeftOpenTag(tagName) && lastTag === tagName) {
+      // 像li这种可以可以忽略闭合标签，例如 <li>xx<li>abc</li> 等同于 <li>xx</li><li>abc</li>
+      parseEndTag(tagName);
+    }
+
     var unary = isUnaryTag(tagName) || tagName === 'html' && lastTag === 'head' || !!unarySlash; // 单标签
 
     var l = match.attrs.length;
@@ -724,6 +768,19 @@ function parseHTML(html, options) {
 
       stack.length = pos;
       lastTag = pos && stack[pos - 1].tag;
+    } else if (lowerCasedTagName === 'br') {
+      // 单独出现 </br> 标签 直接处理成 <br>
+      if (options.start) {
+        options.start(tagName, [], true, start, end);
+      }
+    } else if (lowerCasedTagName === 'p') {
+      // 单独出现 </p> 标签 直接处理成 <p></p>
+      if (options.start) {
+        options.start(tagName, [], false, start, end);
+      }
+      if (options.end) {
+        options.end(tagName, start, end);
+      }
     } else {
       // 如果找不到匹配的起始标签，那么就直接忽略此结束标签
     }
