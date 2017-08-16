@@ -6,6 +6,24 @@ export const isUnaryTag = makeMap(
   true
 )
 
+// Elements that you can, intentionally, leave open
+// (and which close themselves)
+export const canBeLeftOpenTag = makeMap(
+  'colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr,source',
+  true
+)
+
+// HTML5 tags https://html.spec.whatwg.org/multipage/indices.html#elements-3
+// Phrasing Content https://html.spec.whatwg.org/multipage/dom.html#phrasing-content
+export const isNonPhrasingTag = makeMap(
+  'address,article,aside,base,blockquote,body,caption,col,colgroup,dd,' +
+  'details,dialog,div,dl,dt,fieldset,figcaption,figure,footer,form,' +
+  'h1,h2,h3,h4,h5,h6,head,header,hgroup,hr,html,legend,li,menuitem,meta,' +
+  'optgroup,option,param,rp,rt,source,style,summary,tbody,td,tfoot,th,thead,' +
+  'title,tr,track',
+  true
+)
+
 const singleAttrIdentifier = /([^\s"'<>/=]+)/
 const singleAttrAssign = /(?:=)/
 const singleAttrValues = [
@@ -217,6 +235,13 @@ export function parseHTML (html, options) {
     const tagName = match.tagName
     const unarySlash = match.unarySlash
 
+    if (lastTag === 'p' && isNonPhrasingTag(tagName)) { // p标签里边不允许嵌某些标签，如果遇到这种情况，p标签就提前闭合
+      parseEndTag(lastTag)
+    }
+    if (canBeLeftOpenTag(tagName) && lastTag === tagName) { // 像li这种可以可以忽略闭合标签，例如 <li>xx<li>abc</li> 等同于 <li>xx</li><li>abc</li>
+      parseEndTag(tagName)
+    }
+
     const unary = isUnaryTag(tagName) || tagName === 'html' && lastTag === 'head' || !!unarySlash // 单标签
 
     const l = match.attrs.length
@@ -276,6 +301,17 @@ export function parseHTML (html, options) {
 
       stack.length = pos
       lastTag = pos && stack[pos - 1].tag
+    } else if (lowerCasedTagName === 'br') { // 单独出现 </br> 标签 直接处理成 <br>
+      if (options.start) {
+        options.start(tagName, [], true, start, end)
+      }
+    } else if (lowerCasedTagName === 'p') {// 单独出现 </p> 标签 直接处理成 <p></p>
+      if (options.start) {
+        options.start(tagName, [], false, start, end)
+      }
+      if (options.end) {
+        options.end(tagName, start, end)
+      }
     } else {
       // 如果找不到匹配的起始标签，那么就直接忽略此结束标签
     }
