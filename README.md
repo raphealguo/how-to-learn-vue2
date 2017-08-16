@@ -30,59 +30,59 @@
 
 1. 第一章 基础概念
 
-	* [1.1 Virtual DOM](./1.1.md) (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
+  * [1.1 Virtual DOM](./1.1.md) (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
 
-		整个Vue的底层渲染机制是依赖VD的实现，因此先写一个极简的VD算法是非常不错的开头。
+    整个Vue的底层渲染机制是依赖VD的实现，因此先写一个极简的VD算法是非常不错的开头。
 
-	* [1.2 HTML parser](./1.2.md) (源码总共639行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2))
+  * [1.2 HTML parser](./1.2.md) (源码总共639行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2))
 
-		每次手工构造一个 VNode 树效率非常低，而且可读性差，因此这一节会构造一个解释器，能把 HTML 字符串转化成 VNode树。
+    每次手工构造一个 VNode 树效率非常低，而且可读性差，因此这一节会构造一个解释器，能把 HTML 字符串转化成 VNode树。
 
-		还可以阅读一下番外篇: [1.2.1 一个兼容性更佳的HTML parser](./1.2.1.md)
+    还可以阅读一下番外篇: [1.2.1 一个兼容性更佳的HTML parser](./1.2.1.md)
 
-	* 1.3 构建一个最简单的数据绑定的Vue
+  * [1.3 构建一个最简单的数据绑定的Vue](./1.3.md)
 
-		仅仅只是渲染静态模板没必要用到那么多复杂的概念，前边2节的代码已经让我们有足够的基础可以构造一个简单的数据绑定
+    仅仅只是渲染静态模板没必要用到那么多复杂的概念，前边2节的代码已经让我们有足够的基础可以构造一个简单的数据绑定。
 
 2. 第二章 Vue雏形
 
-	* 2.1 控制语句
+  * 2.1 控制语句
 
-		* 2.1.1 条件渲染 v-if v-elseif v-else
+    * 2.1.1 条件渲染 v-if v-elseif v-else
 
-		* 2.1.2 列表渲染 v-for
+    * 2.1.2 列表渲染 v-for
 
-	* 2.2 数据绑定
+  * 2.2 数据绑定
 
-	* 2.3 事件处理器
+  * 2.3 事件处理器
 
-	* 2.4 完成todo案例
+  * 2.4 完成todo案例
 
 3. 第三章 Vue进阶
 
-	* 3.1 生命周期
+  * 3.1 生命周期
 
-	* 3.2 自定义组件
+  * 3.2 自定义组件
 
-		* 3.2.1 Vue.extend
+    * 3.2.1 Vue.extend
 
-		* 3.2.2 简单的自定义组件
+    * 3.2.2 简单的自定义组件
 
-		* 3.2.3 组件的prop
+    * 3.2.3 组件的prop
 
-		* 3.2.4 组件的事件与原生事件
+    * 3.2.4 组件的事件与原生事件
 
-		* 3.2.5 slot
+    * 3.2.5 slot
 
-	* 3.3 nextTick
+  * 3.3 nextTick
 
-	* 3.4 指令
+  * 3.4 指令
 
-		* 3.4.1 自定义指令，内置 v-show 指令
+    * 3.4.1 自定义指令，内置 v-show 指令
 
-		* 3.4.2 内置 v-text v-html 指令
+    * 3.4.2 内置 v-text v-html 指令
 
-	* 3.5 双向绑定 v-model 指令
+  * 3.5 双向绑定 v-model 指令
 
 
 ## 关于我
