@@ -194,6 +194,9 @@ export function parseHTML (html, options) {
 
     if (html === last) { // 如果处理完毕之后 字符串指针仍然没有挪动，那就把剩余字符串作为文本节点 跳出解析
       options.chars && options.chars(html)
+      if (!stack.length && options.warn) { // 如果栈顶存在元素，说明没有闭合，给出warn
+        options.warn(`Mal-formatted tag at end of template: "${html}"`)
+      }
       break
     }
   }
@@ -294,6 +297,11 @@ export function parseHTML (html, options) {
     if (pos >= 0) {
       // 把还没闭合的标签 全部闭合处理
       for (let i = stack.length - 1; i >= pos; i--) {
+        if ((i > pos || !tagName) && options.warn) { // 存在没闭合标签，给出warn
+          options.warn(
+            `tag <${stack[i].tag}> has no matching end tag.`
+          )
+        }
         if (options.end) {
           options.end(stack[i].tag, start, end)
         }

@@ -1,3 +1,19 @@
+/**
+ * Convert a value to a string that is actually rendered.
+ */
+export function _toString (val) {
+  return val == null
+    ? ''
+    : typeof val === 'object'
+      ? JSON.stringify(val, null, 2)
+      : String(val)
+}
+
+
+/**
+ * Make a map and return a function for checking if a key
+ * is in that map.
+ */
 export function makeMap (str, expectsLowerCase) {
   const map = Object.create(null)
   const list = str.split(',')
@@ -9,4 +25,30 @@ export function makeMap (str, expectsLowerCase) {
     : val => map[val]
 }
 
+/**
+ * Check whether the object has the property.
+ */
+const hasOwnProperty = Object.prototype.hasOwnProperty
+export function hasOwn (obj, key) {
+  return hasOwnProperty.call(obj, key)
+}
+
+/**
+ * Strict object type check. Only returns true
+ * for plain JavaScript objects.
+ */
+const toString = Object.prototype.toString
+const OBJECT_STRING = '[object Object]'
+export function isPlainObject (obj) {
+  return toString.call(obj) === OBJECT_STRING
+}
+
+/**
+ * Perform no operation.
+ */
+export function noop () {}
+
+/**
+ * Always return false.
+ */
 export const no = () => false

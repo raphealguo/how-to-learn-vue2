@@ -1,6 +1,8 @@
 import * as nodeOps from './node-ops'
 import VNode from './vnode'
 
+export const emptyNode = new VNode('', {}, [])
+
 function isUndef (s) {
   return s == null
 }
@@ -10,11 +12,12 @@ function isDef (s) {
 }
 
 function sameVnode (vnode1, vnode2) {
-  return vnode1.tag === vnode2.tag
+  return vnode1.tag === vnode2.tag &&
+    !vnode1.data === !vnode2.data
 }
 
 function emptyNodeAt (elm) {
-  return new VNode(nodeOps.tagName(elm).toLowerCase(), [], undefined, elm)
+  return new VNode(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm)
 }
 
 function removeNode (el) {
@@ -31,6 +34,10 @@ function createElm (vnode, parentElm, refElm) {
     vnode.elm = nodeOps.createElement(tag)
 
     createChildren(vnode, children)
+
+    // 属性
+    updateAttrs(emptyNode, vnode)
+
     insert(parentElm, vnode.elm, refElm)
   } else { // 文本节点
     vnode.elm = nodeOps.createTextNode(vnode.text)
@@ -125,9 +132,16 @@ function patchVnode (oldVnode, vnode, removeOnly) {
     return
   }
 
+  const data = vnode.data
+  const hasData = isDef(data)
   const elm = vnode.elm = oldVnode.elm
   const oldCh = oldVnode.children
   const ch = vnode.children
+
+  // 更新属性
+  if (hasData) {
+    updateAttrs(oldVnode, vnode)
+  }
 
   if (isUndef(vnode.text)) {
     if (isDef(oldCh) && isDef(ch)) {
@@ -145,14 +159,13 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode) {
+export default function patch (oldVnode, vnode, parentElm) {
   let isInitialPatch = false
 
   const isRealElement = isDef(oldVnode.nodeType)
   if (!isRealElement && sameVnode(oldVnode, vnode)) {// 如果两个vnode节点根一致
     patchVnode(oldVnode, vnode)
   } else {
-    // 把 DOM 对象包装成 VNode 对象
     if (isRealElement) {
       oldVnode = emptyNodeAt(oldVnode)
     }
@@ -173,4 +186,41 @@ export default function patch (oldVnode, vnode) {
   }
 
   return vnode.elm
+}
+
+
+function updateAttrs (oldVnode, vnode) {
+  if (!oldVnode.data.attrs && !vnode.data.attrs) {
+    return
+  }
+  let key, cur, old
+  const elm = vnode.elm
+  const oldAttrs = oldVnode.data.attrs || {}
+  let attrs= vnode.data.attrs || {}
+
+  for (key in attrs) {
+    cur = attrs[key]
+    old = oldAttrs[key]
+    if (old !== cur) {
+      setAttr(elm, key, cur)
+    }
+  }
+
+  for (key in oldAttrs) {
+    if (attrs[key] == null) {
+      elm.removeAttribute(key)
+    }
+  }
+}
+
+const isFalsyAttrValue = (val) => {
+  return val == null || val === false
+}
+
+function setAttr (el, key, value) {
+  if (isFalsyAttrValue(value)) {
+    el.removeAttribute(key)
+  } else {
+    el.setAttribute(key, value)
+  }
 }
