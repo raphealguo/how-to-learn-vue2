@@ -145,13 +145,14 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode, parentElm) {
+export default function patch (oldVnode, vnode) {
   let isInitialPatch = false
 
   const isRealElement = isDef(oldVnode.nodeType)
   if (!isRealElement && sameVnode(oldVnode, vnode)) {// 如果两个vnode节点根一致
     patchVnode(oldVnode, vnode)
   } else {
+    // 把 DOM 对象包装成 VNode 对象
     if (isRealElement) {
       oldVnode = emptyNodeAt(oldVnode)
     }
