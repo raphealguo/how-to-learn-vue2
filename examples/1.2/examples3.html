@@ -23,24 +23,12 @@
     </a>
     <script src="../../dist/v1.2.js"></script>
     <script>
-    var c = function(tag, children){
-      if (children){
-        for (var i = 0; i < children.length; ++i) {
-          var c = children[i]
-          if (typeof c == "string"){
-            children[i] = t(c)
-          }
-        }
-      }
-      return new VNode(tag, children, undefined, null)
-    }
-
-    var t = function(text){
-      return new VNode(null, [], text, null)
+    var compile = function(html){
+      return generate(parse(html))
     }
 
     var container = document.getElementById("example")
-    var oldVnode = new VNode(container.tagName, [], undefined, container)
+    var oldVnode = container
 
     var render = function(newVnode){
       patch(oldVnode, newVnode)
@@ -50,13 +38,26 @@
     var clk = 2
     var arr = []
 
-    render(c('div', ["Line 1"]))
+    render(
+      compile(
+      `<div>
+        <p>Line 1</p>
+      </div>`
+      )
+    )
+
     setInterval(function(){
-      var newArr = [];
+      var html = [];
       for (var i = 1; i <= clk; ++i){
-        newArr.push(c('p', ["Line " + (i)]))
+        html.push(`<p>Line ${i}</p>`)
       }
-      render(c('div', newArr))
+      render(
+        compile(
+        `<div>
+          ${html.join("")}
+        </div>`
+        )
+      )
       clk++
     }, 1000)
   </script>

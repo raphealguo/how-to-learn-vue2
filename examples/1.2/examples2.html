@@ -23,24 +23,12 @@
     </a>
     <script src="../../dist/v1.2.js"></script>
     <script>
-    var c = function(tag, children){
-      if (children){
-        for (var i = 0; i < children.length; ++i) {
-          var c = children[i]
-          if (typeof c == "string"){
-            children[i] = t(c)
-          }
-        }
-      }
-      return new VNode(tag, children, undefined, null)
-    }
-
-    var t = function(text){
-      return new VNode(null, [], text, null)
+    var compile = function(html){
+      return generate(parse(html))
     }
 
     var container = document.getElementById("example")
-    var oldVnode = new VNode(container.tagName, [], undefined, container)
+    var oldVnode = container
 
     var render = function(newVnode){
       patch(oldVnode, newVnode)
@@ -50,9 +38,13 @@
     var clk = 1
     var showClk = function() {
       render(
-        c('div', [
-          c('span', ["clk : " + clk]),
-        ])
+        compile(
+          `<div>
+            <div>
+              <span>clk : ${clk}</span>
+            </div>
+          </div>`
+        )
       )
     }
     showClk()
