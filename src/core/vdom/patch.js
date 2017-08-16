@@ -1,4 +1,5 @@
 import * as nodeOps from './node-ops'
+import VNode from './vnode'
 
 function isUndef (s) {
   return s == null
@@ -10,6 +11,10 @@ function isDef (s) {
 
 function sameVnode (vnode1, vnode2) {
   return vnode1.tag === vnode2.tag
+}
+
+function emptyNodeAt (elm) {
+  return new VNode(nodeOps.tagName(elm).toLowerCase(), [], undefined, elm)
 }
 
 function removeNode (el) {
@@ -140,12 +145,16 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode) {
+export default function patch (oldVnode, vnode, parentElm) {
   let isInitialPatch = false
 
-  if (sameVnode(oldVnode, vnode)) {// 如果两个vnode节点根一致
+  const isRealElement = isDef(oldVnode.nodeType)
+  if (!isRealElement && sameVnode(oldVnode, vnode)) {// 如果两个vnode节点根一致
     patchVnode(oldVnode, vnode)
   } else {
+    if (isRealElement) {
+      oldVnode = emptyNodeAt(oldVnode)
+    }
     //既然到了这里 就说明两个vnode的dom的根节点不一样
     //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
     //然后把以前的oldVnode全部移除掉
