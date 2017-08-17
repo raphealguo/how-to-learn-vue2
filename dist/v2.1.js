@@ -242,7 +242,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     with (this) {
       return _c('div', undefined, [
         _c('span', {
-          attrs: { name : 'test'}
+          attrs: { name : 'test' }
         }, [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
