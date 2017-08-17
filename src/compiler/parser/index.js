@@ -1,6 +1,9 @@
 import { parseHTML } from './html-parser'
 import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
+import { mustUseProp } from 'core/vdom/attrs'
+
+export const dirRE = /^:/
 
 function makeAttrsMap (attrs){
   const map = {}
@@ -51,6 +54,10 @@ export function parse (template) {
       if (isPreTag(element.tag)) {
         inPre = true
       }
+
+      element.plain = !element.key && !attrs.length
+      processAttrs(element)
+
       if (!root) {
         root = element
       } else if (!stack.length) { // 根节点只能有一个，否则给出warn
@@ -110,4 +117,36 @@ export function parse (template) {
     }
   })
   return root
+}
+
+function processAttrs (el) {
+  const list = el.attrsList
+  let i, l, name, value
+  for (i = 0, l = list.length; i < l; i++) {
+    name  = list[i].name
+    value = list[i].value
+
+    if (dirRE.test(name)) {
+      // mark element as dynamic
+      el.hasBindings = true
+
+      name = name.replace(dirRE, '')
+
+      if (mustUseProp(el.tag, el.attrsMap.type, name)) {
+        addProp(el, name, value)
+      } else {
+        addAttr(el, name, value)
+      }
+    } else {
+      addAttr(el, name, JSON.stringify(value))
+    }
+  }
+}
+
+function addProp (el, name, value) {
+  (el.props || (el.props = [])).push({ name, value })
+}
+
+function addAttr (el, name, value) {
+  (el.attrs || (el.attrs = [])).push({ name, value })
 }

@@ -1,5 +1,9 @@
 import * as nodeOps from './node-ops'
 import VNode from './vnode'
+import { updateAttrs } from './attrs'
+import { updateDOMProps } from './dom-props'
+
+export const emptyNode = new VNode('', {}, [])
 
 function isUndef (s) {
   return s == null
@@ -10,11 +14,12 @@ function isDef (s) {
 }
 
 function sameVnode (vnode1, vnode2) {
-  return vnode1.tag === vnode2.tag
+  return vnode1.tag === vnode2.tag &&
+    !vnode1.data === !vnode2.data
 }
 
 function emptyNodeAt (elm) {
-  return new VNode(nodeOps.tagName(elm).toLowerCase(), [], undefined, elm)
+  return new VNode(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm)
 }
 
 function removeNode (el) {
@@ -31,6 +36,11 @@ function createElm (vnode, parentElm, refElm) {
     vnode.elm = nodeOps.createElement(tag)
 
     createChildren(vnode, children)
+
+    // 属性
+    updateAttrs(emptyNode, vnode)
+    updateDOMProps(emptyNode, vnode)
+
     insert(parentElm, vnode.elm, refElm)
   } else { // 文本节点
     vnode.elm = nodeOps.createTextNode(vnode.text)
@@ -125,9 +135,17 @@ function patchVnode (oldVnode, vnode, removeOnly) {
     return
   }
 
+  const data = vnode.data
+  const hasData = isDef(data)
   const elm = vnode.elm = oldVnode.elm
   const oldCh = oldVnode.children
   const ch = vnode.children
+
+  // 更新属性
+  if (hasData) {
+    updateAttrs(oldVnode, vnode)
+    updateDOMProps(oldVnode, vnode)
+  }
 
   if (isUndef(vnode.text)) {
     if (isDef(oldCh) && isDef(ch)) {
@@ -145,7 +163,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode) {
+export default function patch (oldVnode, vnode, parentElm) {
   let isInitialPatch = false
 
   const isRealElement = isDef(oldVnode.nodeType)
