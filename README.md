@@ -29,7 +29,7 @@
 我会把每个章节的 **源码行数** 以及 **对应的分支** 标记出来，方便大家可以看到每次源码变更的行数。
 
 1. 第一章 构建一个简单的Vue
-	* [1.1 Virtual DOM](./articles/1.1.md)
+	* [1.1 Virtual DOM](./1.1.md)
 
 		(源码总共231行，[点击查看分支代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
 
