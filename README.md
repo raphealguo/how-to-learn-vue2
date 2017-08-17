@@ -30,15 +30,15 @@
 
 1. 第一章 基础概念
 
-	* [1.1 Virtual DOM](./1.1.md) (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
+	* [1.1 Virtual DOM](./articles/1.1.md) (源码总共231行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.1))
 
 		整个Vue的底层渲染机制是依赖VD的实现，因此先写一个极简的VD算法是非常不错的开头。
 
-	* [1.2 HTML parser](./1.2.md) (源码总共639行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2))
+	* [1.2 HTML parser](./articles/1.2.md) (源码总共639行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.2)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.1...1.2))
 
 		每次手工构造一个 VNode 树效率非常低，而且可读性差，因此这一节会构造一个解释器，能把 HTML 字符串转化成 VNode树。
 
-		还可以阅读一下番外篇: [1.2.1 一个兼容性更佳的HTML parser](./1.2.1.md)
+		还可以阅读一下番外篇: [1.2.1 一个兼容性更佳的HTML parser](./articles/1.2.1.md)
 
 	* 1.3 构建一个最简单的数据绑定的Vue
 
@@ -83,7 +83,6 @@
 		* 3.4.2 内置 v-text v-html 指令
 
 	* 3.5 双向绑定 v-model 指令
-
 
 ## 关于我
 
