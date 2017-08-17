@@ -1,4 +1,4 @@
-import { parseHTML } from './parser/html-parser'
+import { parseHTML } from './html-parser'
 
 function makeAttrsMap (attrs){
   const map = {}
