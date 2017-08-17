@@ -86,6 +86,9 @@
 
 	* 3.5 双向绑定 v-model 指令
 
+## 附录
+
+1. [VNode render](./VNodeRender.md)
 
 ## 关于我
 
