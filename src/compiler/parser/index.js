@@ -212,7 +212,7 @@ function processAttrs (el) {
       // mark element as dynamic
       el.hasBindings = true
 
-      if (bindRE.test(name)) {
+      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
         name = name.replace(bindRE, '')
 
         if (mustUseProp(el.tag, el.attrsMap.type, name)) {
