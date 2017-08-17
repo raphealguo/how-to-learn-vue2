@@ -1,8 +1,8 @@
 # VNode render
 
-## render code
+## 1. render code
 
-### 1. 非文本 VNode 节点
+### 1.1. 非文本 VNode 节点
 
 html:
 
@@ -16,7 +16,7 @@ render code:
 _c("div", [])
 ```
 
-## 2. 文本 VNode 节点
+### 1.2. 文本 VNode 节点
 
 html:
 
@@ -32,7 +32,7 @@ _c("div", [
 ])
 ```
 
-## 3. 文本节点带表达式
+### 1.3. 文本节点带表达式
 
 html:
 
@@ -48,7 +48,7 @@ _c("div", [
 ])
 ```
 
-## renderHelpersFunc
+## 2. renderHelpersFunc
 
 1. _c (tag, children)  创建一个非文本 VNode 节点
 2. _v (text)  创建一个文本VNode节点
