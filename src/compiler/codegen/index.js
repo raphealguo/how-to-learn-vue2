@@ -4,6 +4,8 @@ import VNode from 'core/vdom/vnode'
 /*
   <div>
     <span name="test">abc{{a}}xxx{{b}}def</span>
+    <div v-if="a">a</div>
+    <div v-if="b">b</div>
   </div>
 
   生成函数：
@@ -14,10 +16,12 @@ import VNode from 'core/vdom/vnode'
     with (this) {
       return _c('div', undefined, [
         _c('span', {
-          attrs: { name : 'test' }
+          attrs: { name : 'test'}
         }, [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
+        a ? _c('div', undefined, [ _v("a") ]) : _e(),
+        b ? _c('div', undefined, [ _v("b") ]) : _e(),
       ])
     }
   }
@@ -31,19 +35,44 @@ export function generate (ast) {
 }
 
 function genElement (el){
-  let code
-  const children = genChildren(el)
-  const data = genData(el)
+  if (el.if && !el.ifProcessed) {
+    return genIf(el)
+  } else {
+    let code
+    const children = genChildren(el)
+    const data = genData(el)
 
-  code = `_c('${el.tag}'${
-      `,${data}` // data
-    }${
-    children ? `,${children}` : '' // children
-  })`
+    code = `_c('${el.tag}'${
+        `,${data}` // data
+      }${
+      children ? `,${children}` : '' // children
+    })`
 
-  return code
+    return code
+  }
 }
 
+function genIf (el) {
+  el.ifProcessed = true // 标记已经处理过当前这个if节点了，避免递归死循环
+  return genIfConditions(el.ifConditions.slice())
+}
+
+function genIfConditions (conditions) {
+  if (!conditions.length) {
+    return '_e()'
+  }
+
+  const condition = conditions.shift() // 因为我们并没有去真正删除 el.ifConditions 队列的元素，所以需要有el.ifProcessed = true来结束递归
+  if (condition.exp) {
+    return `(${condition.exp})?${genTernaryExp(condition.block)}:${genIfConditions(conditions)}`
+  } else {
+    return `${genTernaryExp(condition.block)}`
+  }
+
+  function genTernaryExp (el) {
+    return genElement(el)
+  }
+}
 
 function genData (el) {
   let data = '{'

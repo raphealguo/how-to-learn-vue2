@@ -52,7 +52,9 @@
 
 	* 2.2 控制语句
 
-		* 2.2.1 条件渲染 v-if v-elseif v-else
+		* [2.2.1 条件渲染 v-if, v-else-if, v-else](./articles/2.2.1.md) (源码总共1233行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.1...2.2.1)))
+
+			往往我们需要通过控制某个状态显示或者隐藏界面的某部分，这里就需要用到 if else 的控制语句。
 
 		* 2.2.2 列表渲染 v-for
 

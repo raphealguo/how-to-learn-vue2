@@ -3,8 +3,7 @@ import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
 
-export const dirRE = /^v-|^:/
-const bindRE = /^:|^v-bind:/
+export const dirRE = /^:/
 
 function makeAttrsMap (attrs){
   const map = {}
@@ -26,6 +25,8 @@ const isPreTag = (tag) => tag === 'pre'
  * 把HTML字符串转成AST结构
  * ast = { attrsList, attrsMap, children, parent, tag, type=1 } // 非文本节点
  * ast = { text, type=3 } // 文本节点
+ *
+ * 在AST树 ： if else-if else的多个token节点会合成一个节点，if节点里边包含 [{exp:'if判断条件', block:<if的ast节点>}, {exp:'else-if判断条件', block:<else-if的ast节点>, {block:<else的ast节点>}]
  */
 export function parse (template) {
   const stack = []
@@ -57,17 +58,35 @@ export function parse (template) {
       }
 
       element.plain = !element.key && !attrs.length
+
+      processIf(element)
       processAttrs(element)
 
       if (!root) {
         root = element
-      } else if (!stack.length) { // 根节点只能有一个，否则给出warn
-        warn(
-          `Component template should contain exactly one root element. `
-        )
+      } else if (!stack.length) {
+        if (root.if && (element.elseif || element.else)) {
+          // root = <div v-if=""></div><div v-else-if=""></div><div v-else></div>
+          // 允许root是由if else-if else组织的多节点
+          addIfCondition(root, {
+            exp: element.elseif,
+            block: element
+          })
+        } else {// 否则根节点只能有一个，给出warn
+          warn(
+            `Component template should contain exactly one root element. ` +
+            `If you are using v-if on multiple elements, ` +
+            `use v-else-if to chain them instead.`
+          )
+        }
       }
       if (currentParent) {
-        currentParent.children.push(element)
+        if (element.elseif || element.else) { // 处理非root节点的 else-if else
+          processIfConditions(element, currentParent)
+        } else {
+          currentParent.children.push(element)
+          element.parent = currentParent
+        }
       }
       if (!unary) { // 如果不是单标签，就压入堆栈
         currentParent = element
@@ -120,6 +139,67 @@ export function parse (template) {
   return root
 }
 
+
+function processIf (el) {
+  const exp = getAndRemoveAttr(el, 'v-if')
+  if (exp) {
+    el.if = exp
+    addIfCondition(el, {
+      exp: exp,
+      block: el
+    })
+  } else {
+    if (getAndRemoveAttr(el, 'v-else') != null) {
+      el.else = true
+    }
+    const elseif = getAndRemoveAttr(el, 'v-else-if')
+    if (elseif) {
+      el.elseif = elseif
+    }
+  }
+}
+
+// v-else-if v-else要找到上一个if节点
+// 把当前的表达式插入到
+function processIfConditions (el, parent) {
+  const prev = findPrevElement(parent.children)
+  if (prev && prev.if) { //上个节点是if节点，把表达式插入到该节点的ifCondition队列去
+    addIfCondition(prev, {
+      exp: el.elseif,
+      block: el
+    })
+  } else { // 找不到上一个if节点，需要报错
+    warn(
+      `v-${el.elseif ? ('else-if="' + el.elseif + '"') : 'else'} ` +
+      `used on element <${el.tag}> without corresponding v-if.`
+    )
+  }
+}
+
+function findPrevElement (children) {
+  let i = children.length
+  while (i--) {
+    if (children[i].type === 1) {
+      return children[i]
+    } else {
+      if (children[i].text !== ' ') { // 在if和else几点中间不要有其他非空白的文本节点
+        warn(
+          `text "${children[i].text.trim()}" between v-if and v-else(-if) ` +
+          `will be ignored.`
+        )
+      }
+      children.pop()
+    }
+  }
+}
+
+function addIfCondition (el, condition) {
+  if (!el.ifConditions) {
+    el.ifConditions = []
+  }
+  el.ifConditions.push(condition)
+}
+
 function processAttrs (el) {
   const list = el.attrsList
   let i, l, name, value
@@ -131,14 +211,12 @@ function processAttrs (el) {
       // mark element as dynamic
       el.hasBindings = true
 
-      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
-        name = name.replace(bindRE, '')
+      name = name.replace(dirRE, '')
 
-        if (mustUseProp(el.tag, el.attrsMap.type, name)) {
-          addProp(el, name, value)
-        } else {
-          addAttr(el, name, value)
-        }
+      if (mustUseProp(el.tag, el.attrsMap.type, name)) {
+        addProp(el, name, value)
+      } else {
+        addAttr(el, name, value)
       }
     } else {
       addAttr(el, name, JSON.stringify(value))
@@ -152,4 +230,18 @@ function addProp (el, name, value) {
 
 function addAttr (el, name, value) {
   (el.attrs || (el.attrs = [])).push({ name, value })
+}
+
+function getAndRemoveAttr (el, name) {
+  let val
+  if ((val = el.attrsMap[name]) != null) {
+    const list = el.attrsList
+    for (let i = 0, l = list.length; i < l; i++) {
+      if (list[i].name === name) {
+        list.splice(i, 1)
+        break
+      }
+    }
+  }
+  return val
 }

@@ -3,7 +3,7 @@ import compile from 'compiler/index'
 import generate from 'compiler/codegen/index'
 
 import { _toString } from '../util/index'
-import { createTextVNode, createElementVNode } from '../vdom/vnode'
+import { createTextVNode, createElementVNode, createEmptyVNode } from '../vdom/vnode'
 
 import {
   warn,
@@ -22,6 +22,7 @@ export default function Vue (options) {
 Vue.prototype._c = createElementVNode
 Vue.prototype._v = createTextVNode
 Vue.prototype._s = _toString
+Vue.prototype._e = createEmptyVNode
 
 Vue.prototype._init = function (options) {
   const vm = this
@@ -63,7 +64,6 @@ Vue.prototype.setData = function (data) {
 }
 
 Vue.prototype.$mount = function (el) {
-  const vm = this
   vm._vnode = document.getElementById(el)
   this._update()
 }
