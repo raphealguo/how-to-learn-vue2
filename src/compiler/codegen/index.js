@@ -1,4 +1,4 @@
-import parse from 'compiler/index'
+import parse from 'compiler/parser/index'
 import VNode from 'core/vdom/vnode'
 
 export default function generate (ast) {
