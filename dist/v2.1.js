@@ -63,78 +63,11 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 14);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.warn = warn;
-var hasConsole = typeof console !== 'undefined';
-
-function warn(msg, vm) {
-  if (hasConsole) {
-    console.error('[Vue warn]: ' + msg + ' ');
-  }
-}
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createElementVNode = createElementVNode;
-exports.createTextVNode = createTextVNode;
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var VNode = function VNode(tag, // 标签名
-children, // 孩子 [VNode, VNode]
-text, // 文本节点
-elm // 对应的真实dom对象
-) {
-  _classCallCheck(this, VNode);
-
-  this.tag = tag;
-  this.children = children;
-  this.text = text;
-  this.elm = elm;
-};
-
-exports.default = VNode;
-function createElementVNode(tag, children) {
-  if (!tag) {
-    return createEmptyVNode();
-  }
-
-  var vnode = new VNode(tag, children, undefined, undefined);
-  return vnode;
-}
-
-var createEmptyVNode = exports.createEmptyVNode = function createEmptyVNode() {
-  var node = new VNode();
-  node.text = '';
-  return node;
-};
-
-function createTextVNode(val) {
-  return new VNode(undefined, undefined, String(val));
-}
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -206,6 +139,75 @@ var no = exports.no = function no() {
 };
 
 /***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.warn = warn;
+var hasConsole = typeof console !== 'undefined';
+
+function warn(msg, vm) {
+  if (hasConsole) {
+    console.error('[Vue warn]: ' + msg + ' ');
+  }
+}
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createElementVNode = createElementVNode;
+exports.createTextVNode = createTextVNode;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var VNode = function VNode(tag, // 标签名
+data, // data = { attrs: 属性key-val }
+children, // 孩子 [VNode, VNode]
+text, // 文本节点
+elm // 对应的真实dom对象
+) {
+  _classCallCheck(this, VNode);
+
+  this.tag = tag;
+  this.data = data;
+  this.children = children;
+  this.text = text;
+  this.elm = elm;
+};
+
+exports.default = VNode;
+function createElementVNode(tag, data, children) {
+  if (!tag) {
+    return createEmptyVNode();
+  }
+
+  var vnode = new VNode(tag, data, children, undefined, undefined);
+  return vnode;
+}
+
+var createEmptyVNode = exports.createEmptyVNode = function createEmptyVNode() {
+  var node = new VNode();
+  node.text = '';
+  return node;
+};
+
+function createTextVNode(val) {
+  return new VNode(undefined, undefined, undefined, String(val));
+}
+
+/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -221,7 +223,7 @@ var _index = __webpack_require__(4);
 
 var _index2 = _interopRequireDefault(_index);
 
-var _vnode = __webpack_require__(1);
+var _vnode = __webpack_require__(2);
 
 var _vnode2 = _interopRequireDefault(_vnode);
 
@@ -229,7 +231,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /*
   <div>
-    <span>abc{{a}}xxx{{b}}def</span>
+    <span name="test">abc{{a}}xxx{{b}}def</span>
   </div>
 
   生成函数：
@@ -238,8 +240,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
   function render() {
     with (this) {
-      return _c('div', [
-        _c('span', [
+      return _c('div', undefined, [
+        _c('span', {
+          attrs: { name : 'test'}
+        }, [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
       ])
@@ -257,10 +261,29 @@ function generate(ast) {
 function genElement(el) {
   var code = void 0;
   var children = genChildren(el);
-  code = '_c(\'' + el.tag + '\'' + (children ? ',' + children : '' // children
+  var data = genData(el);
+
+  code = '_c(\'' + el.tag + '\'' + (',' + data // data
+  ) + (children ? ',' + children : '' // children
   ) + ')';
 
   return code;
+}
+
+function genData(el) {
+  var data = '{';
+
+  if (el.attrs) {
+    data += 'attrs:{' + genProps(el.attrs) + '},';
+  }
+  // DOM props
+  if (el.props) {
+    data += 'domProps:{' + genProps(el.props) + '},';
+  }
+
+  data = data.replace(/,$/, '') + '}';
+
+  return data;
 }
 
 function genChildren(el) {
@@ -283,6 +306,15 @@ function genText(text) {
   : JSON.stringify(text.text)) + ')';
 }
 
+function genProps(props) {
+  var res = '';
+  for (var i = 0; i < props.length; i++) {
+    var prop = props[i];
+    res += '"' + prop.name + '":' + prop.value + ',';
+  }
+  return res.slice(0, -1); // 去掉尾巴的逗号
+}
+
 /***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -295,11 +327,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = compile;
 
-var _index = __webpack_require__(7);
+var _index = __webpack_require__(8);
 
-var _debug = __webpack_require__(0);
+var _debug = __webpack_require__(1);
 
-var _util = __webpack_require__(2);
+var _util = __webpack_require__(0);
 
 var _index2 = __webpack_require__(3);
 
@@ -331,9 +363,69 @@ function compile(template) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.isFalsyAttrValue = exports.mustUseProp = undefined;
+exports.updateAttrs = updateAttrs;
+
+var _util = __webpack_require__(0);
+
+function updateAttrs(oldVnode, vnode) {
+  if (!oldVnode.data.attrs && !vnode.data.attrs) {
+    return;
+  }
+  var key = void 0,
+      cur = void 0,
+      old = void 0;
+  var elm = vnode.elm;
+  var oldAttrs = oldVnode.data.attrs || {};
+  var attrs = vnode.data.attrs || {};
+
+  for (key in attrs) {
+    cur = attrs[key];
+    old = oldAttrs[key];
+    if (old !== cur) {
+      setAttr(elm, key, cur);
+    }
+  }
+
+  for (key in oldAttrs) {
+    if (attrs[key] == null) {
+      elm.removeAttribute(key);
+    }
+  }
+}
+
+// attributes that should be using props for binding
+// 需要用props来绑定的属性
+var acceptValue = (0, _util.makeMap)('input,textarea,option,select');
+var mustUseProp = exports.mustUseProp = function mustUseProp(tag, type, attr) {
+  return attr === 'value' && acceptValue(tag) && type !== 'button' || attr === 'selected' && tag === 'option' || attr === 'checked' && tag === 'input' || attr === 'muted' && tag === 'video';
+};
+
+var isFalsyAttrValue = exports.isFalsyAttrValue = function isFalsyAttrValue(val) {
+  return val == null || val === false;
+};
+
+function setAttr(el, key, value) {
+  if (isFalsyAttrValue(value)) {
+    el.removeAttribute(key);
+  } else {
+    el.setAttribute(key, value);
+  }
+}
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.default = Vue;
 
-var _patch = __webpack_require__(11);
+var _patch = __webpack_require__(13);
 
 var _patch2 = _interopRequireDefault(_patch);
 
@@ -345,9 +437,9 @@ var _index3 = __webpack_require__(3);
 
 var _index4 = _interopRequireDefault(_index3);
 
-var _index5 = __webpack_require__(9);
+var _index5 = __webpack_require__(10);
 
-var _vnode = __webpack_require__(1);
+var _vnode = __webpack_require__(2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -408,7 +500,7 @@ Vue.prototype.$mount = function (el) {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -420,7 +512,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.isNonPhrasingTag = exports.canBeLeftOpenTag = exports.isUnaryTag = undefined;
 exports.parseHTML = parseHTML;
 
-var _util = __webpack_require__(2);
+var _util = __webpack_require__(0);
 
 var isUnaryTag = exports.isUnaryTag = (0, _util.makeMap)('area,base,br,col,embed,frame,hr,img,input,isindex,keygen,' + 'link,meta,param,source,track,wbr', true);
 
@@ -751,7 +843,7 @@ function parseHTML(html, options) {
 }
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -760,13 +852,18 @@ function parseHTML(html, options) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.dirRE = undefined;
 exports.parse = parse;
 
-var _htmlParser = __webpack_require__(6);
+var _htmlParser = __webpack_require__(7);
 
-var _textParser = __webpack_require__(8);
+var _textParser = __webpack_require__(9);
 
-var _debug = __webpack_require__(0);
+var _debug = __webpack_require__(1);
+
+var _attrs = __webpack_require__(5);
+
+var dirRE = exports.dirRE = /^:/;
 
 function makeAttrsMap(attrs) {
   var map = {};
@@ -818,6 +915,10 @@ function parse(template) {
       if (isPreTag(element.tag)) {
         inPre = true;
       }
+
+      element.plain = !element.key && !attrs.length;
+      processAttrs(element);
+
       if (!root) {
         root = element;
       } else if (!stack.length) {
@@ -880,8 +981,43 @@ function parse(template) {
   return root;
 }
 
+function processAttrs(el) {
+  var list = el.attrsList;
+  var i = void 0,
+      l = void 0,
+      name = void 0,
+      value = void 0;
+  for (i = 0, l = list.length; i < l; i++) {
+    name = list[i].name;
+    value = list[i].value;
+
+    if (dirRE.test(name)) {
+      // mark element as dynamic
+      el.hasBindings = true;
+
+      name = name.replace(dirRE, '');
+
+      if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
+        addProp(el, name, value);
+      } else {
+        addAttr(el, name, value);
+      }
+    } else {
+      addAttr(el, name, JSON.stringify(value));
+    }
+  }
+}
+
+function addProp(el, name, value) {
+  (el.props || (el.props = [])).push({ name: name, value: value });
+}
+
+function addAttr(el, name, value) {
+  (el.attrs || (el.attrs = [])).push({ name: name, value: value });
+}
+
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -924,7 +1060,7 @@ function parseText(text) {
 }
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -934,7 +1070,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _util = __webpack_require__(2);
+var _util = __webpack_require__(0);
 
 Object.keys(_util).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -946,7 +1082,7 @@ Object.keys(_util).forEach(function (key) {
   });
 });
 
-var _debug = __webpack_require__(0);
+var _debug = __webpack_require__(1);
 
 Object.keys(_debug).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -959,7 +1095,39 @@ Object.keys(_debug).forEach(function (key) {
 });
 
 /***/ }),
-/* 10 */
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.updateDOMProps = updateDOMProps;
+function updateDOMProps(oldVnode, vnode) {
+  if (!oldVnode.data.domProps && !vnode.data.domProps) {
+    return;
+  }
+  var key = void 0,
+      cur = void 0;
+  var elm = vnode.elm;
+  var oldProps = oldVnode.data.domProps || {};
+
+  var props = vnode.data.domProps || {};
+
+  for (key in oldProps) {
+    if (props[key] == null) {
+      elm[key] = '';
+    }
+  }
+  for (key in props) {
+    elm[key] = props[key];
+  }
+}
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1026,7 +1194,7 @@ function setAttribute(node, key, val) {
 }
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1035,19 +1203,26 @@ function setAttribute(node, key, val) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.emptyNode = undefined;
 exports.default = patch;
 
-var _nodeOps = __webpack_require__(10);
+var _nodeOps = __webpack_require__(12);
 
 var nodeOps = _interopRequireWildcard(_nodeOps);
 
-var _vnode = __webpack_require__(1);
+var _vnode = __webpack_require__(2);
 
 var _vnode2 = _interopRequireDefault(_vnode);
+
+var _attrs = __webpack_require__(5);
+
+var _domProps = __webpack_require__(11);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+var emptyNode = exports.emptyNode = new _vnode2.default('', {}, []);
 
 function isUndef(s) {
   return s == null;
@@ -1058,11 +1233,11 @@ function isDef(s) {
 }
 
 function sameVnode(vnode1, vnode2) {
-  return vnode1.tag === vnode2.tag;
+  return vnode1.tag === vnode2.tag && !vnode1.data === !vnode2.data;
 }
 
 function emptyNodeAt(elm) {
-  return new _vnode2.default(nodeOps.tagName(elm).toLowerCase(), [], undefined, elm);
+  return new _vnode2.default(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm);
 }
 
 function removeNode(el) {
@@ -1079,6 +1254,11 @@ function createElm(vnode, parentElm, refElm) {
     vnode.elm = nodeOps.createElement(tag);
 
     createChildren(vnode, children);
+
+    // 属性
+    (0, _attrs.updateAttrs)(emptyNode, vnode);
+    (0, _domProps.updateDOMProps)(emptyNode, vnode);
+
     insert(parentElm, vnode.elm, refElm);
   } else {
     // 文本节点
@@ -1177,9 +1357,17 @@ function patchVnode(oldVnode, vnode, removeOnly) {
     return;
   }
 
+  var data = vnode.data;
+  var hasData = isDef(data);
   var elm = vnode.elm = oldVnode.elm;
   var oldCh = oldVnode.children;
   var ch = vnode.children;
+
+  // 更新属性
+  if (hasData) {
+    (0, _attrs.updateAttrs)(oldVnode, vnode);
+    (0, _domProps.updateDOMProps)(oldVnode, vnode);
+  }
 
   if (isUndef(vnode.text)) {
     if (isDef(oldCh) && isDef(ch)) {
@@ -1224,13 +1412,13 @@ function patch(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _index = __webpack_require__(5);
+var _index = __webpack_require__(6);
 
 var _index2 = _interopRequireDefault(_index);
 

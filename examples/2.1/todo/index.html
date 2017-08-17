@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
   </head>
   <body>
+    <div id="todoapp">
+    </div>
+    <script id="tmpl" type="text/html">
     <section class="todoapp">
       <header class="header">
         <h1>todos</h1>
@@ -17,9 +20,9 @@
         <ul class="todo-list">
           <li class="todo" v-for="(todo, index) in filteredTodos" :key="todo" :class="{completed: todo.completed, editing: todo == editedTodo}">
             <div class="view">
-              <input class="toggle" type="checkbox" :checked="todo.completed" @change="changeTodo(todo)">
-              <label @dblclick="editTodo(todo)">{{todo.title}}</label>
-              <button class="destroy" @click="removeTodo(todo)"></button>
+              <input class="toggle" type="checkbox" :checked="todo.completed">
+              <label>{{todo.title}}</label>
+              <button class="destroy"></button>
             </div>
             <input class="edit" type="text" :value="todo.title" @keydown="inputEditTodo($event, todo)" v-todo-focus="todo == editedTodo" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)">
           </li>
@@ -39,10 +42,9 @@
         </button>
       </footer>
     </section>
-    <script src="../../dist/v2.1.js"></script>
-    <script src="node_modules/director/build/director.js"></script>
+    </script>
+    <script src="../../../dist/v2.1.js"></script>
     <script src="js/store.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/routes.js"></script>
   </body>
 </html>
