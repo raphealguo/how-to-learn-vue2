@@ -46,7 +46,7 @@
 
 2. 第二章 Vue雏形
 
-	* [2.1 VNode 的属性 attrs 和 props](./2.1.md) (源码总共1108行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.3/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.3...2.1)))
+	* [2.1 VNode 的属性 attrs 和 props](./2.1.md) (源码总共1112行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.3/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.3...2.1)))
 
 		在前边我们忽略了 Dom 元素的属性，我们这一节就把这个补齐，同时从这一节开始我们来逐步完善一个 Vue 的 todo 案例。
 
