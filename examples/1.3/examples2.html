@@ -7,7 +7,7 @@
   </head>
   <body>
     <div class="header">
-      <h1>每一秒数字加1</h1>
+      <h1>通过 setData 改变数据</h1>
     </div>
     <div class="vue-test-container">
       <div id="example"></div>
@@ -23,36 +23,33 @@
     </a>
     <script src="../../dist/v1.3.js"></script>
     <script>
-    var compile = function(html){
-      return generate(parse(html))
-    }
+    var vm = new Vue({
+      data: {
+        obj : {
+          name1 : 'value1',
+          name2 : 'value2',
+        }
+      },
+      template:
+        `<div>
+        <p>Obj = {</p>
+        <p>&nbsp;&nbsp;name1: {{obj.name1}}</p>
+        <p>&nbsp;&nbsp;name2: {{obj.name2}}</p>
+        <p>}</p>
+      </div>`
+    })
 
-    var container = document.getElementById("example")
-    var oldVnode = container
+    vm.$mount("example")
 
-    var render = function(newVnode){
-      patch(oldVnode, newVnode)
-      oldVnode = newVnode
-    }
-
-    var clk = 1
-    var showClk = function() {
-      render(
-        compile(
-          `<div>
-            <div>
-              <span>clk : ${clk}</span>
-            </div>
-          </div>`
-        )
-      )
-    }
-    showClk()
+    var clk1 = 1, clk2 = 10000
     setInterval(function(){
-      clk++
-      showClk();
+      vm.setData({
+        obj:{
+          name1: clk1++,
+          name2: clk2--,
+        }
+      })
     }, 1000)
-
   </script>
   </body>
 </html>
