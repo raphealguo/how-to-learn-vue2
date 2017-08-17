@@ -13,31 +13,31 @@
     <section class="todoapp">
       <header class="header">
         <h1>todos</h1>
-        <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" :value="newTodo">
+        <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-bind:value="newTodo">
       </header>
       <section class="main" :style="!todos.length?'display:none;':''">
-        <input class="toggle-all" type="checkbox" v-model="allDone">
+        <input class="toggle-all" type="checkbox">
         <ul class="todo-list">
-          <li class="todo" v-for="(todo, index) in filteredTodos" :key="todo" :class="{completed: todo.completed, editing: todo == editedTodo}">
+          <li class="todo">
             <div class="view">
-              <input class="toggle" type="checkbox" :checked="todo.completed">
-              <label>{{todo.title}}</label>
+              <input class="toggle" type="checkbox">
+              <label>todo.title</label>
               <button class="destroy"></button>
             </div>
-            <input class="edit" type="text" :value="todo.title" @keydown="inputEditTodo($event, todo)" v-todo-focus="todo == editedTodo" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)">
+            <input class="edit" type="text">
           </li>
         </ul>
       </section>
-      <footer class="footer" v-show="todos.length">
+      <footer class="footer">
         <span class="todo-count">
-          <strong v-text="remaining"></strong> {{remaining}} left
+          <strong>remaining</strong> left
         </span>
         <ul class="filters">
-          <li><a href="#/all" :class="{selected: visibility == 'all'}">All</a></li>
-          <li><a href="#/active" :class="{selected: visibility == 'active'}">Active</a></li>
-          <li><a href="#/completed" :class="{selected: visibility == 'completed'}">Completed</a></li>
+          <li><a href="#/all" :class="visibility == 'all' ? 'selected' : ''">All</a></li>
+          <li><a href="#/active" :class="visibility == 'active' ? 'selected' : ''">Active</a></li>
+          <li><a href="#/completed" :class="visibility == 'completed' ? 'selected' : ''">Completed</a></li>
         </ul>
-        <button class="clear-completed" @click="removeCompleted" :style="todos.length > remaining?'':'display:none;'">
+        <button class="clear-completed">
           Clear completed
         </button>
       </footer>

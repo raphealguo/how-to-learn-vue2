@@ -495,6 +495,7 @@ Vue.prototype.setData = function (data) {
 };
 
 Vue.prototype.$mount = function (el) {
+  var vm = this;
   vm._vnode = document.getElementById(el);
   this._update();
 };
@@ -863,7 +864,8 @@ var _debug = __webpack_require__(1);
 
 var _attrs = __webpack_require__(5);
 
-var dirRE = exports.dirRE = /^:/;
+var dirRE = exports.dirRE = /^v-|^:/;
+var bindRE = /^:|^v-bind:/;
 
 function makeAttrsMap(attrs) {
   var map = {};
@@ -995,12 +997,15 @@ function processAttrs(el) {
       // mark element as dynamic
       el.hasBindings = true;
 
-      name = name.replace(dirRE, '');
+      if (bindRE.test(name)) {
+        // :xxx 或者 v-bind:xxx
+        name = name.replace(bindRE, '');
 
-      if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
-        addProp(el, name, value);
-      } else {
-        addAttr(el, name, value);
+        if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
+          addProp(el, name, value);
+        } else {
+          addAttr(el, name, value);
+        }
       }
     } else {
       addAttr(el, name, JSON.stringify(value));
