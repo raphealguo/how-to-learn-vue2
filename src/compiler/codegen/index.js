@@ -3,7 +3,7 @@ import VNode from 'core/vdom/vnode'
 
 /*
   <div>
-    <span name="test">abc{{a}}xxx{{b}}def</span>
+    <span>abc{{a}}xxx{{b}}def</span>
   </div>
 
   生成函数：
@@ -12,10 +12,8 @@ import VNode from 'core/vdom/vnode'
 
   function render() {
     with (this) {
-      return _c('div', undefined, [
-        _c('span', {
-          attrs: { name : 'test'}
-        }, [
+      return _c('div', [
+        _c('span', [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
       ])
@@ -33,30 +31,12 @@ export function generate (ast) {
 function genElement (el){
   let code
   const children = genChildren(el)
-  const data = genData(el)
-
   code = `_c('${el.tag}'${
-      `,${data}` // data
-    }${
     children ? `,${children}` : '' // children
   })`
 
   return code
 }
-
-
-function genData (el) {
-  let data = '{'
-
-  if (el.attrs) {
-    data += `attrs:{${genProps(el.attrs)}},`
-  }
-
-  data = data.replace(/,$/, '') + '}'
-
-  return data
-}
-
 
 function genChildren (el) {
   const children = el.children
@@ -78,13 +58,4 @@ function genText (text) {
     ? text.expression // no need for () because already wrapped in _s()
     : JSON.stringify(text.text)
   })`
-}
-
-function genProps (props) {
-  let res = ''
-  for (let i = 0; i < props.length; i++) {
-    const prop = props[i]
-    res += `"${prop.name}":${prop.value},`
-  }
-  return res.slice(0, -1) // 去掉尾巴的逗号
 }

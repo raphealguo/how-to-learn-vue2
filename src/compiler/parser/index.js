@@ -51,10 +51,6 @@ export function parse (template) {
       if (isPreTag(element.tag)) {
         inPre = true
       }
-
-      element.plain = !element.key && !attrs.length
-      processAttrs(element)
-
       if (!root) {
         root = element
       } else if (!stack.length) { // 根节点只能有一个，否则给出warn
@@ -114,18 +110,4 @@ export function parse (template) {
     }
   })
   return root
-}
-
-function processAttrs (el) {
-  const list = el.attrsList
-  let i, l, name, value
-  for (i = 0, l = list.length; i < l; i++) {
-    name  = list[i].name
-    value = list[i].value
-    addAttr(el, name, JSON.stringify(value))
-  }
-}
-
-function addAttr (el, name, value) {
-  (el.attrs || (el.attrs = [])).push({ name, value })
 }
