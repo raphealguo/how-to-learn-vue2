@@ -18,7 +18,7 @@
       <section class="main" :style="!todos.length?'display:none;':''">
         <input class="toggle-all" type="checkbox">
         <ul class="todo-list">
-          <li class="todo" v-for="(todo, index) in todos" :class="(todo.completed ? 'completed' : '') + (todo == editedTodo ? 'editing' : '')">
+          <li class="todo" v-for="(todo, index) in todos" :key="todo" :class="(todo.completed ? 'completed' : '') + (todo == editedTodo ? 'editing' : '')">
             <div class="view">
               <input class="toggle" type="checkbox" :checked="todo.completed">
               <label>{{todo.title}}</label>
