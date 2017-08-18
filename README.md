@@ -58,6 +58,10 @@
 
 		* [2.2.2 列表渲染 v-for](./articles/2.2.2.md) (源码总共1371行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.2/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.1...2.2.2)))
 
+			这一节我们更新了 todo 的案例，支持 v-for 语法，可以传递一个数组进行列表渲染。
+
+			还可以阅读番外篇了解如何改善 VNode 的 patch 算法减少列表 DOM 大规模重绘 [2.2.2.1 列表渲染 v-for 的 key](./2.2.2.1.md)。
+
 
 	* 2.3 数据绑定
 
