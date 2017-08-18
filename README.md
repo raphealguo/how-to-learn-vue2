@@ -56,7 +56,7 @@
 
 			往往我们需要通过控制某个状态显示或者隐藏界面的某部分，这里就需要用到 if else 的控制语句。
 
-		* [2.2.2 列表渲染 v-for](./articles/2.2.2.md) (./articles/2.2.2.md) (源码总共1237行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.2/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.1...2.2.2)))
+		* [2.2.2 列表渲染 v-for](./articles/2.2.2.md) (./articles/2.2.2.md) (源码总共1371行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.2/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.1...2.2.2)))
 
 
 	* 2.3 数据绑定

@@ -669,6 +669,7 @@ Vue.prototype.setData = function (data) {
 };
 
 Vue.prototype.$mount = function (el) {
+  var vm = this;
   vm._vnode = document.getElementById(el);
   this._update();
 };
