@@ -1,6 +1,5 @@
 import parse from 'compiler/index'
 import VNode from 'core/vdom/vnode'
-import { warn } from 'core/util/debug'
 
 /*
   <div>
@@ -99,15 +98,6 @@ function genFor (el) {
   const iterator1 = el.iterator1 ? `,${el.iterator1}` : ''
   const iterator2 = el.iterator2 ? `,${el.iterator2}` : ''
 
-  if (!el.key) { // v-for 最好声明key属性
-    warn(
-      `<${el.tag} v-for="${alias} in ${exp}">: component lists rendered with ` +
-      `v-for should have explicit keys. ` +
-      `See https://vuejs.org/guide/list.html#key for more info.`,
-      true /* tip */
-    )
-  }
-
   // v-for="(item, index) in list"
   // alias = item, iterator1 = index
 
@@ -128,10 +118,6 @@ function genFor (el) {
 function genData (el) {
   let data = '{'
 
-  // key
-  if (el.key) {
-    data += `key:${el.key},`
-  }
   if (el.attrs) {
     data += `attrs:{${genProps(el.attrs)}},`
   }

@@ -14,21 +14,8 @@ function isDef (s) {
 }
 
 function sameVnode (vnode1, vnode2) {
-  return (
-    vnode1.key === vnode2.key &&
-    vnode1.tag === vnode2.tag &&
+  return vnode1.tag === vnode2.tag &&
     !vnode1.data === !vnode2.data
-  )
-}
-
-function createKeyToOldIdx (children, beginIdx, endIdx) {
-  let i, key
-  const map = {}
-  for (i = beginIdx; i <= endIdx; ++i) {
-    key = children[i].key
-    if (isDef(key)) map[key] = i
-  }
-  return map
 }
 
 function emptyNodeAt (elm) {
@@ -131,31 +118,8 @@ function updateChildren (parentElm, oldCh, newCh, removeOnly) {
       oldEndVnode = oldCh[--oldEndIdx]
       newStartVnode = newCh[++newStartIdx]
     } else {
-      if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
-      idxInOld = isDef(newStartVnode.key) ? oldKeyToIdx[newStartVnode.key] : null
-      if (isUndef(idxInOld)) { // 当前元素在旧VNode里边找不到相同的key
-        createElm(newStartVnode, parentElm, oldStartVnode.elm)
-        newStartVnode = newCh[++newStartIdx]
-      } else {
-        elmToMove = oldCh[idxInOld] // 找到同key的元素
-
-        if (!elmToMove) {
-          warn(
-            'It seems there are duplicate keys that is causing an update error. ' +
-            'Make sure each v-for item has a unique key.'
-          )
-        }
-        if (sameVnode(elmToMove, newStartVnode)) {
-          patchVnode(elmToMove, newStartVnode) // 先patch这个节点
-          oldCh[idxInOld] = undefined
-          canMove && nodeOps.insertBefore(parentElm, newStartVnode.elm, oldStartVnode.elm) // 然后开始移动
-          newStartVnode = newCh[++newStartIdx]
-        } else {
-          // 虽然是同个key，但是标签等不一致。同样不能复用
-          createElm(newStartVnode, parentElm, oldStartVnode.elm)
-          newStartVnode = newCh[++newStartIdx]
-        }
-      }
+      createElm(newStartVnode, parentElm, oldStartVnode.elm)
+      newStartVnode = newCh[++newStartIdx]
     }
   }
   if (oldStartIdx > oldEndIdx) {

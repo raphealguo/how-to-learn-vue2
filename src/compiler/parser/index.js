@@ -3,7 +3,8 @@ import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
 
-export const dirRE = /^:/
+export const dirRE = /^v-|^:/
+const bindRE = /^:|^v-bind:/
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
 export const forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/
 
@@ -63,8 +64,6 @@ export function parse (template) {
 
       processFor(element)
       processIf(element)
-      processKey(element)
-
       processAttrs(element)
 
       if (!root) {
@@ -142,13 +141,6 @@ export function parse (template) {
     }
   })
   return root
-}
-
-function processKey (el) {
-  const exp = getBindingAttr(el, 'key')
-  if (exp) {
-    el.key = exp
-  }
 }
 
 function processFor (el) {
@@ -251,12 +243,14 @@ function processAttrs (el) {
       // mark element as dynamic
       el.hasBindings = true
 
-      name = name.replace(dirRE, '')
+      if (bindRE.test(name)) {
+        name = name.replace(bindRE, '')
 
-      if (mustUseProp(el.tag, el.attrsMap.type, name)) {
-        addProp(el, name, value)
-      } else {
-        addAttr(el, name, value)
+        if (mustUseProp(el.tag, el.attrsMap.type, name)) {
+          addProp(el, name, value)
+        } else {
+          addAttr(el, name, value)
+        }
       }
     } else {
       addAttr(el, name, JSON.stringify(value))
@@ -270,18 +264,6 @@ function addProp (el, name, value) {
 
 function addAttr (el, name, value) {
   (el.attrs || (el.attrs = [])).push({ name, value })
-}
-
-function getBindingAttr (el,  name, getStatic) {
-  const dynamicValue = getAndRemoveAttr(el, ':' + name)
-  if (dynamicValue != null) {
-    return dynamicValue
-  } else if (getStatic !== false) {
-    const staticValue = getAndRemoveAttr(el, name)
-    if (staticValue != null) {
-      return JSON.stringify(staticValue)
-    }
-  }
 }
 
 function getAndRemoveAttr (el, name) {

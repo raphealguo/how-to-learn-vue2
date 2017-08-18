@@ -13,7 +13,6 @@ export default class VNode {
     this.children = children
     this.text = text
     this.elm = elm
-    this.key = data && data.key
   }
 }
 
