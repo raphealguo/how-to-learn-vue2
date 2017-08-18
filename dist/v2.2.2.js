@@ -82,6 +82,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports._toString = _toString;
 exports.makeMap = makeMap;
 exports.hasOwn = hasOwn;
+exports.isObject = isObject;
 exports.isPlainObject = isPlainObject;
 exports.noop = noop;
 /**
@@ -114,6 +115,15 @@ function makeMap(str, expectsLowerCase) {
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 function hasOwn(obj, key) {
   return hasOwnProperty.call(obj, key);
+}
+
+/**
+ * Quick object check - this is primarily used to tell
+ * Objects from primitive values when we know the value
+ * is a JSON-compliant type.
+ */
+function isObject(obj) {
+  return obj !== null && (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object';
 }
 
 /**
@@ -167,8 +177,12 @@ function warn(msg, vm) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.createEmptyVNode = undefined;
 exports.createElementVNode = createElementVNode;
 exports.createTextVNode = createTextVNode;
+exports.renderList = renderList;
+
+var _index = __webpack_require__(5);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -193,8 +207,18 @@ function createElementVNode(tag, data, children) {
     return createEmptyVNode();
   }
 
-  var vnode = new VNode(tag, data, children, undefined, undefined);
-  return vnode;
+  return new VNode(tag, data, simpleNormalizeChildren(children), undefined, undefined);
+}
+
+// 对v-for的复杂的情况做处理 _c('ul', undefined, [_c('div'), _l(xxx), _c('div')])
+// _l(xxx) 返回是一个 [VNode, VNode] 数组
+function simpleNormalizeChildren(children) {
+  for (var i = 0; i < children.length; i++) {
+    if (Array.isArray(children[i])) {
+      return Array.prototype.concat.apply([], children);
+    }
+  }
+  return children;
 }
 
 var createEmptyVNode = exports.createEmptyVNode = function createEmptyVNode() {
@@ -205,6 +229,42 @@ var createEmptyVNode = exports.createEmptyVNode = function createEmptyVNode() {
 
 function createTextVNode(val) {
   return new VNode(undefined, undefined, undefined, String(val));
+}
+
+// v-for="(item, index) in list"
+// alias = item, iterator1 = index
+
+// v-for="(value, key, index) in object"
+// alias = value, iterator1 = key, iterator2 = index
+
+// val = list
+// render = function (alias, iterator1, iterator2) { return VNode }
+function renderList(val, render) {
+  var ret = void 0,
+      i = void 0,
+      l = void 0,
+      keys = void 0,
+      key = void 0;
+  if (Array.isArray(val) || typeof val === 'string') {
+    ret = new Array(val.length);
+    for (i = 0, l = val.length; i < l; i++) {
+      ret[i] = render(val[i], i);
+    }
+  } else if (typeof val === 'number') {
+    // 支持 v-for="n in 10"
+    ret = new Array(val);
+    for (i = 0; i < val; i++) {
+      ret[i] = render(i + 1, i);
+    }
+  } else if ((0, _index.isObject)(val)) {
+    keys = Object.keys(val);
+    ret = new Array(keys.length);
+    for (i = 0, l = keys.length; i < l; i++) {
+      key = keys[i];
+      ret[i] = render(val[key], key, i);
+    }
+  }
+  return ret;
 }
 
 /***/ }),
@@ -234,6 +294,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     <span name="test">abc{{a}}xxx{{b}}def</span>
     <div v-if="a">a</div>
     <div v-if="b">b</div>
+    <ul>
+      <li v-for="(item, index) in list">{{index}} : {{item}}</li>
+    </ul>
   </div>
 
   生成函数：
@@ -248,8 +311,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
         }, [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
+
+        // v-if 语句
         a ? _c('div', undefined, [ _v("a") ]) : _e(),
         b ? _c('div', undefined, [ _v("b") ]) : _e(),
+
+        //v-for
+        _c('ul',
+          _l(
+            (list),
+            function(item, index) {
+              return _c(
+                'li',[ _v(_s(index)+" : "+_s(item)) ]
+              )
+            })
+        )
       ])
     }
   }
@@ -263,11 +339,14 @@ function generate(ast) {
 }
 
 function genElement(el) {
-  if (el.if && !el.ifProcessed) {
+  if (el.for && !el.forProcessed) {
+    // 为了v-for和v-if的优先级： <ul v-for="(item, index) in list" v-if="index==0">，需要先处理for语句
+    return genFor(el);
+  }if (el.if && !el.ifProcessed) {
     return genIf(el);
   } else {
     var code = void 0;
-    var children = genChildren(el);
+    var children = genChildren(el) || '[]';
     var data = genData(el);
 
     code = '_c(\'' + el.tag + '\'' + (',' + data // data
@@ -300,6 +379,26 @@ function genIfConditions(conditions) {
   }
 }
 
+function genFor(el) {
+  var exp = el.for;
+  var alias = el.alias;
+  var iterator1 = el.iterator1 ? ',' + el.iterator1 : '';
+  var iterator2 = el.iterator2 ? ',' + el.iterator2 : '';
+
+  // v-for="(item, index) in list"
+  // alias = item, iterator1 = index
+
+  // v-for="(value, key, index) in object"
+  // alias = value, iterator1 = key, iterator2 = index
+
+
+  // _l(val, render)
+  // val = list
+  // render = function (alias, iterator1, iterator2) { return genElement(el) }
+  el.forProcessed = true; // avoid recursion
+  return '_l((' + exp + '),' + ('function(' + alias + iterator1 + iterator2 + '){') + ('return ' + genElement(el)) + '})';
+}
+
 function genData(el) {
   var data = '{';
 
@@ -319,6 +418,14 @@ function genData(el) {
 function genChildren(el) {
   var children = el.children;
   if (children.length) {
+    var _el = children[0];
+
+    // 对v-for的情况做处理
+    // _c('ul', undefined, [_l(xxx)])  需要把_l提出来外层
+    // 还有一些复杂的情况：_c('ul', undefined, [_c('div'), _l(xxx), _c('div')]) 只能在_c里边处理
+    if (children.length === 1 && _el.for) {
+      return genElement(_el);
+    }
     return '[' + children.map(genNode).join(',') + ']';
   }
 }
@@ -357,7 +464,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = compile;
 
-var _index = __webpack_require__(8);
+var _index = __webpack_require__(9);
 
 var _debug = __webpack_require__(1);
 
@@ -385,6 +492,41 @@ function compile(template) {
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _util = __webpack_require__(0);
+
+Object.keys(_util).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _util[key];
+    }
+  });
+});
+
+var _debug = __webpack_require__(1);
+
+Object.keys(_debug).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _debug[key];
+    }
+  });
+});
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -444,7 +586,7 @@ function setAttr(el, key, value) {
 }
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -467,7 +609,7 @@ var _index3 = __webpack_require__(3);
 
 var _index4 = _interopRequireDefault(_index3);
 
-var _index5 = __webpack_require__(10);
+var _index5 = __webpack_require__(5);
 
 var _vnode = __webpack_require__(2);
 
@@ -484,6 +626,7 @@ function Vue(options) {
 Vue.prototype._c = _vnode.createElementVNode;
 Vue.prototype._v = _vnode.createTextVNode;
 Vue.prototype._s = _index5._toString;
+Vue.prototype._l = _vnode.renderList;
 Vue.prototype._e = _vnode.createEmptyVNode;
 
 Vue.prototype._init = function (options) {
@@ -526,13 +669,12 @@ Vue.prototype.setData = function (data) {
 };
 
 Vue.prototype.$mount = function (el) {
-  var vm = this;
   vm._vnode = document.getElementById(el);
   this._update();
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -875,7 +1017,7 @@ function parseHTML(html, options) {
 }
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -884,19 +1026,21 @@ function parseHTML(html, options) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.dirRE = undefined;
+exports.forIteratorRE = exports.forAliasRE = exports.dirRE = undefined;
 exports.parse = parse;
 
-var _htmlParser = __webpack_require__(7);
+var _htmlParser = __webpack_require__(8);
 
-var _textParser = __webpack_require__(9);
+var _textParser = __webpack_require__(10);
 
 var _debug = __webpack_require__(1);
 
-var _attrs = __webpack_require__(5);
+var _attrs = __webpack_require__(6);
 
 var dirRE = exports.dirRE = /^v-|^:/;
 var bindRE = /^:|^v-bind:/;
+var forAliasRE = exports.forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/;
+var forIteratorRE = exports.forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/;
 
 function makeAttrsMap(attrs) {
   var map = {};
@@ -953,6 +1097,7 @@ function parse(template) {
 
       element.plain = !element.key && !attrs.length;
 
+      processFor(element);
       processIf(element);
       processAttrs(element);
 
@@ -1031,6 +1176,35 @@ function parse(template) {
     }
   });
   return root;
+}
+
+function processFor(el) {
+  var exp = void 0;
+  if (exp = getAndRemoveAttr(el, 'v-for')) {
+    var inMatch = exp.match(forAliasRE);
+    // v-for="item in list"             =>     ["item in list", "item", "list"]
+    // v-for="(item, index) in list"    =>     ["(item, index) in list", "(item, index)", "list"]
+    // v-for="(value, key, index) in object"    =>     ["(value, key, index) in object", "(value, key, index)", "object"]
+
+    if (!inMatch) {
+      // v-for语法有错误的时候，提示编译错误
+      (0, _debug.warn)('Invalid v-for expression: ' + exp);
+      return;
+    }
+    el.for = inMatch[2].trim();
+    var alias = inMatch[1].trim();
+    var iteratorMatch = alias.match(forIteratorRE);
+    if (iteratorMatch) {
+      // v-for="(item, index) in list"  或者 // v-for="(value, key, index) in object"
+      el.alias = iteratorMatch[1].trim();
+      el.iterator1 = iteratorMatch[2].trim();
+      if (iteratorMatch[3]) {
+        el.iterator2 = iteratorMatch[3].trim();
+      }
+    } else {
+      el.alias = alias; // alias = "item"
+    }
+  }
 }
 
 function processIf(el) {
@@ -1143,7 +1317,7 @@ function getAndRemoveAttr(el, name) {
 }
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1184,41 +1358,6 @@ function parseText(text) {
   }
   return tokens.join('+');
 }
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _util = __webpack_require__(0);
-
-Object.keys(_util).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _util[key];
-    }
-  });
-});
-
-var _debug = __webpack_require__(1);
-
-Object.keys(_debug).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _debug[key];
-    }
-  });
-});
 
 /***/ }),
 /* 11 */
@@ -1340,7 +1479,7 @@ var _vnode = __webpack_require__(2);
 
 var _vnode2 = _interopRequireDefault(_vnode);
 
-var _attrs = __webpack_require__(5);
+var _attrs = __webpack_require__(6);
 
 var _domProps = __webpack_require__(11);
 
@@ -1544,7 +1683,7 @@ function patch(oldVnode, vnode) {
 "use strict";
 
 
-var _index = __webpack_require__(6);
+var _index = __webpack_require__(7);
 
 var _index2 = _interopRequireDefault(_index);
 

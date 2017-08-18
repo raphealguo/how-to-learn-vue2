@@ -18,13 +18,13 @@
       <section class="main" :style="!todos.length?'display:none;':''">
         <input class="toggle-all" type="checkbox">
         <ul class="todo-list">
-          <li class="todo">
+          <li class="todo" v-for="(todo, index) in todos" :class="(todo.completed ? 'completed' : '') + (todo == editedTodo ? 'editing' : '')">
             <div class="view">
-              <input class="toggle" type="checkbox">
-              <label>todo.title</label>
+              <input class="toggle" type="checkbox" :checked="todo.completed">
+              <label>{{todo.title}}</label>
               <button class="destroy"></button>
             </div>
-            <input class="edit" type="text">
+            <input class="edit" type="text" :value="todo.title">
           </li>
         </ul>
       </section>
