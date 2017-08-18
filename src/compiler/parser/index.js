@@ -3,8 +3,9 @@ import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
 
-export const dirRE = /^v-|^:/
-const bindRE = /^:|^v-bind:/
+export const dirRE = /^:/
+export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
+export const forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/
 
 function makeAttrsMap (attrs){
   const map = {}
@@ -60,7 +61,10 @@ export function parse (template) {
 
       element.plain = !element.key && !attrs.length
 
+      processFor(element)
       processIf(element)
+      processKey(element)
+
       processAttrs(element)
 
       if (!root) {
@@ -140,6 +144,41 @@ export function parse (template) {
   return root
 }
 
+function processKey (el) {
+  const exp = getBindingAttr(el, 'key')
+  if (exp) {
+    el.key = exp
+  }
+}
+
+function processFor (el) {
+  let exp
+  if ((exp = getAndRemoveAttr(el, 'v-for'))) {
+    const inMatch = exp.match(forAliasRE)
+    // v-for="item in list"             =>     ["item in list", "item", "list"]
+    // v-for="(item, index) in list"    =>     ["(item, index) in list", "(item, index)", "list"]
+    // v-for="(value, key, index) in object"    =>     ["(value, key, index) in object", "(value, key, index)", "object"]
+
+    if (!inMatch) { // v-for语法有错误的时候，提示编译错误
+      warn(
+        `Invalid v-for expression: ${exp}`
+      )
+      return
+    }
+    el.for = inMatch[2].trim()
+    const alias = inMatch[1].trim()
+    const iteratorMatch = alias.match(forIteratorRE)
+    if (iteratorMatch) { // v-for="(item, index) in list"  或者 // v-for="(value, key, index) in object"
+      el.alias = iteratorMatch[1].trim()
+      el.iterator1 = iteratorMatch[2].trim()
+      if (iteratorMatch[3]) {
+        el.iterator2 = iteratorMatch[3].trim()
+      }
+    } else {
+      el.alias = alias // alias = "item"
+    }
+  }
+}
 
 function processIf (el) {
   const exp = getAndRemoveAttr(el, 'v-if')
@@ -212,14 +251,12 @@ function processAttrs (el) {
       // mark element as dynamic
       el.hasBindings = true
 
-      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
-        name = name.replace(bindRE, '')
+      name = name.replace(dirRE, '')
 
-        if (mustUseProp(el.tag, el.attrsMap.type, name)) {
-          addProp(el, name, value)
-        } else {
-          addAttr(el, name, value)
-        }
+      if (mustUseProp(el.tag, el.attrsMap.type, name)) {
+        addProp(el, name, value)
+      } else {
+        addAttr(el, name, value)
       }
     } else {
       addAttr(el, name, JSON.stringify(value))
@@ -233,6 +270,18 @@ function addProp (el, name, value) {
 
 function addAttr (el, name, value) {
   (el.attrs || (el.attrs = [])).push({ name, value })
+}
+
+function getBindingAttr (el,  name, getStatic) {
+  const dynamicValue = getAndRemoveAttr(el, ':' + name)
+  if (dynamicValue != null) {
+    return dynamicValue
+  } else if (getStatic !== false) {
+    const staticValue = getAndRemoveAttr(el, name)
+    if (staticValue != null) {
+      return JSON.stringify(staticValue)
+    }
+  }
 }
 
 function getAndRemoveAttr (el, name) {

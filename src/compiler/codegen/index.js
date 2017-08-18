@@ -1,11 +1,15 @@
 import parse from 'compiler/index'
 import VNode from 'core/vdom/vnode'
+import { warn } from 'core/util/debug'
 
 /*
   <div>
     <span name="test">abc{{a}}xxx{{b}}def</span>
     <div v-if="a">a</div>
     <div v-if="b">b</div>
+    <ul>
+      <li v-for="(item, index) in list">{{index}} : {{item}}</li>
+    </ul>
   </div>
 
   生成函数：
@@ -16,12 +20,25 @@ import VNode from 'core/vdom/vnode'
     with (this) {
       return _c('div', undefined, [
         _c('span', {
-          attrs: { name : 'test' }
+          attrs: { name : 'test'}
         }, [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
+
+        // v-if 语句
         a ? _c('div', undefined, [ _v("a") ]) : _e(),
         b ? _c('div', undefined, [ _v("b") ]) : _e(),
+
+        //v-for
+        _c('ul',
+          _l(
+            (list),
+            function(item, index) {
+              return _c(
+                'li',[ _v(_s(index)+" : "+_s(item)) ]
+              )
+            })
+        )
       ])
     }
   }
@@ -35,11 +52,13 @@ export function generate (ast) {
 }
 
 function genElement (el){
-  if (el.if && !el.ifProcessed) {
+  if (el.for && !el.forProcessed) { // 为了v-for和v-if的优先级： <ul v-for="(item, index) in list" v-if="index==0">，需要先处理for语句
+    return genFor(el)
+  } if (el.if && !el.ifProcessed) {
     return genIf(el)
   } else {
     let code
-    const children = genChildren(el)
+    const children = genChildren(el) || '[]'
     const data = genData(el)
 
     code = `_c('${el.tag}'${
@@ -74,9 +93,45 @@ function genIfConditions (conditions) {
   }
 }
 
+function genFor (el) {
+  const exp = el.for
+  const alias = el.alias
+  const iterator1 = el.iterator1 ? `,${el.iterator1}` : ''
+  const iterator2 = el.iterator2 ? `,${el.iterator2}` : ''
+
+  if (!el.key) { // v-for 最好声明key属性
+    warn(
+      `<${el.tag} v-for="${alias} in ${exp}">: component lists rendered with ` +
+      `v-for should have explicit keys. ` +
+      `See https://vuejs.org/guide/list.html#key for more info.`,
+      true /* tip */
+    )
+  }
+
+  // v-for="(item, index) in list"
+  // alias = item, iterator1 = index
+
+  // v-for="(value, key, index) in object"
+  // alias = value, iterator1 = key, iterator2 = index
+
+
+  // _l(val, render)
+  // val = list
+  // render = function (alias, iterator1, iterator2) { return genElement(el) }
+  el.forProcessed = true // avoid recursion
+  return `_l((${exp}),` +
+    `function(${alias}${iterator1}${iterator2}){` +
+      `return ${genElement(el)}` +
+    '})'
+}
+
 function genData (el) {
   let data = '{'
 
+  // key
+  if (el.key) {
+    data += `key:${el.key},`
+  }
   if (el.attrs) {
     data += `attrs:{${genProps(el.attrs)}},`
   }
@@ -94,6 +149,14 @@ function genData (el) {
 function genChildren (el) {
   const children = el.children
   if (children.length) {
+    const el = children[0]
+
+    // 对v-for的情况做处理
+    // _c('ul', undefined, [_l(xxx)])  需要把_l提出来外层
+    // 还有一些复杂的情况：_c('ul', undefined, [_c('div'), _l(xxx), _c('div')]) 只能在_c里边处理
+    if (children.length === 1 && el.for) {
+      return genElement(el)
+    }
     return `[${children.map(genNode).join(',')}]`
   }
 }
