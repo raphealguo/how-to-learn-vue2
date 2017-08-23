@@ -3,7 +3,8 @@ import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
 
-export const dirRE = /^:/
+export const dirRE = /^v-|^:/
+const bindRE = /^:|^v-bind:/
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
 export const forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/
 
@@ -251,12 +252,14 @@ function processAttrs (el) {
       // mark element as dynamic
       el.hasBindings = true
 
-      name = name.replace(dirRE, '')
+      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
+        name = name.replace(bindRE, '')
 
-      if (mustUseProp(el.tag, el.attrsMap.type, name)) {
-        addProp(el, name, value)
-      } else {
-        addAttr(el, name, value)
+        if (mustUseProp(el.tag, el.attrsMap.type, name)) {
+          addProp(el, name, value)
+        } else {
+          addAttr(el, name, value)
+        }
       }
     } else {
       addAttr(el, name, JSON.stringify(value))
