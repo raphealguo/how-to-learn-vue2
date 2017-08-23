@@ -65,9 +65,11 @@
 
 	* 2.3 数据绑定
 
-		* [2.3.1 ](./articles/2.3.1.md) (源码总共1237行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.3.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.2.1...2.3.1))
+		* [2.3.1 响应式原理](./articles/2.3.1.md) (源码总共1547行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.3.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.2.1...2.3.1))
 
-		* 2.3.2 条件渲染 v-if, v-else-if, v-else
+			在之前的例子中，我们总是通过 vm.setData( { a:1, b:2 /* 需要填写整个完整的 data */} ) 来改变数据，从而引起界面的响应式变化。为了提高开发效率，我们更希望使用 vm.a = 3 来修改值，从而更新视图。
+
+		* 2.3.2 深度追踪依赖变化
 
 	* 2.4 事件处理器
 

@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 14);
+/******/ 	return __webpack_require__(__webpack_require__.s = 16);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -177,12 +177,59 @@ var no = exports.no = function no() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _util = __webpack_require__(1);
+
+Object.keys(_util).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _util[key];
+    }
+  });
+});
+
+var _lang = __webpack_require__(12);
+
+Object.keys(_lang).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _lang[key];
+    }
+  });
+});
+
+var _debug = __webpack_require__(0);
+
+Object.keys(_debug).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _debug[key];
+    }
+  });
+});
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.createEmptyVNode = undefined;
 exports.createElementVNode = createElementVNode;
 exports.createTextVNode = createTextVNode;
 exports.renderList = renderList;
 
-var _index = __webpack_require__(5);
+var _index = __webpack_require__(2);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -269,7 +316,7 @@ function renderList(val, render) {
 }
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -280,11 +327,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.generate = generate;
 
-var _index = __webpack_require__(4);
+var _index = __webpack_require__(5);
 
 var _index2 = _interopRequireDefault(_index);
 
-var _vnode = __webpack_require__(2);
+var _vnode = __webpack_require__(3);
 
 var _vnode2 = _interopRequireDefault(_vnode);
 
@@ -466,7 +513,7 @@ function genProps(props) {
 }
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -483,7 +530,7 @@ var _debug = __webpack_require__(0);
 
 var _util = __webpack_require__(1);
 
-var _index2 = __webpack_require__(3);
+var _index2 = __webpack_require__(4);
 
 function makeFunction(code, errors) {
   try {
@@ -502,53 +549,6 @@ function compile(template) {
     render: makeFunction(code.render)
   };
 }
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _util = __webpack_require__(1);
-
-Object.keys(_util).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _util[key];
-    }
-  });
-});
-
-var _lang = __webpack_require__(16);
-
-Object.keys(_lang).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _lang[key];
-    }
-  });
-});
-
-var _debug = __webpack_require__(0);
-
-Object.keys(_debug).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function get() {
-      return _debug[key];
-    }
-  });
-});
 
 /***/ }),
 /* 6 */
@@ -622,23 +622,23 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = Vue;
 
-var _patch = __webpack_require__(13);
+var _patch = __webpack_require__(15);
 
 var _patch2 = _interopRequireDefault(_patch);
 
-var _index = __webpack_require__(4);
+var _index = __webpack_require__(5);
 
 var _index2 = _interopRequireDefault(_index);
 
-var _index3 = __webpack_require__(3);
+var _index3 = __webpack_require__(4);
 
 var _index4 = _interopRequireDefault(_index3);
 
-var _index5 = __webpack_require__(5);
+var _index5 = __webpack_require__(2);
 
-var _vnode = __webpack_require__(2);
+var _vnode = __webpack_require__(3);
 
-var _index6 = __webpack_require__(15);
+var _index6 = __webpack_require__(11);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1474,6 +1474,77 @@ function parseText(text) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.observe = observe;
+exports.defineReactive = defineReactive;
+
+var _index = __webpack_require__(2);
+
+function observe(obj, vm) {
+  if (!(0, _index.isObject)(obj)) {
+    return;
+  }
+
+  var keys = Object.keys(obj);
+  for (var i = 0; i < keys.length; i++) {
+    defineReactive(obj, keys[i], obj[keys[i]], vm);
+  }
+}
+
+function defineReactive(obj, key, val, vm) {
+  observe(val);
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter() {
+      return val;
+    },
+    set: function reactiveSetter(newVal) {
+      var value = val;
+
+      if (newVal === value) {
+        return;
+      }
+
+      // console.log("newVal = ", newVal)
+      val = newVal;
+      observe(newVal);
+      // update
+      vm && vm._update();
+    }
+  });
+}
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isReserved = isReserved;
+/**
+ * Check if a string starts with $ or _
+ */
+function isReserved(str) {
+  // '$' (charCode) 0x24
+  // '_' (charCode) 0x5F
+  var c = (str + '').charCodeAt(0);
+  return c === 0x24 || c === 0x5F;
+}
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.updateDOMProps = updateDOMProps;
 function updateDOMProps(oldVnode, vnode) {
   if (!oldVnode.data.domProps && !vnode.data.domProps) {
@@ -1497,7 +1568,7 @@ function updateDOMProps(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1564,7 +1635,7 @@ function setAttribute(node, key, val) {
 }
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1576,17 +1647,17 @@ Object.defineProperty(exports, "__esModule", {
 exports.emptyNode = undefined;
 exports.default = patch;
 
-var _nodeOps = __webpack_require__(12);
+var _nodeOps = __webpack_require__(14);
 
 var nodeOps = _interopRequireWildcard(_nodeOps);
 
-var _vnode = __webpack_require__(2);
+var _vnode = __webpack_require__(3);
 
 var _vnode2 = _interopRequireDefault(_vnode);
 
 var _attrs = __webpack_require__(6);
 
-var _domProps = __webpack_require__(11);
+var _domProps = __webpack_require__(13);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1814,7 +1885,7 @@ function patch(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1827,77 +1898,6 @@ var _index2 = _interopRequireDefault(_index);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 window.Vue = _index2.default;
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.observe = observe;
-exports.defineReactive = defineReactive;
-
-var _index = __webpack_require__(5);
-
-function observe(obj, vm) {
-  if (!(0, _index.isObject)(obj)) {
-    return;
-  }
-
-  var keys = Object.keys(obj);
-  for (var i = 0; i < keys.length; i++) {
-    defineReactive(obj, keys[i], obj[keys[i]], vm);
-  }
-}
-
-function defineReactive(obj, key, val, vm) {
-  observe(val);
-  Object.defineProperty(obj, key, {
-    enumerable: true,
-    configurable: true,
-    get: function reactiveGetter() {
-      return val;
-    },
-    set: function reactiveSetter(newVal) {
-      var value = val;
-
-      if (newVal === value) {
-        return;
-      }
-
-      // console.log("newVal = ", newVal)
-      val = newVal;
-      observe(newVal);
-      // update
-      vm && vm._update();
-    }
-  });
-}
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isReserved = isReserved;
-/**
- * Check if a string starts with $ or _
- */
-function isReserved(str) {
-  // '$' (charCode) 0x24
-  // '_' (charCode) 0x5F
-  var c = (str + '').charCodeAt(0);
-  return c === 0x24 || c === 0x5F;
-}
 
 /***/ })
 /******/ ]);
