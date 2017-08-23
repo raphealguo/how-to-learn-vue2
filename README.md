@@ -65,6 +65,10 @@
 
 	* 2.3 数据绑定
 
+		* [2.3.1 ](./articles/2.3.1.md) (源码总共1237行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.3.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.2.1...2.3.1))
+
+		* 2.3.2 条件渲染 v-if, v-else-if, v-else
+
 	* 2.4 事件处理器
 
 	* 2.5 完成todo案例
