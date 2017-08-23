@@ -526,6 +526,18 @@ Object.keys(_util).forEach(function (key) {
   });
 });
 
+var _lang = __webpack_require__(16);
+
+Object.keys(_lang).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _lang[key];
+    }
+  });
+});
+
 var _debug = __webpack_require__(0);
 
 Object.keys(_debug).forEach(function (key) {
@@ -626,6 +638,8 @@ var _index5 = __webpack_require__(5);
 
 var _vnode = __webpack_require__(2);
 
+var _index6 = __webpack_require__(15);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function Vue(options) {
@@ -646,7 +660,14 @@ Vue.prototype._init = function (options) {
   var vm = this;
   var template = options.template;
 
-  this._initData(options.data);
+  if (options.data) {
+    this._initData();
+  } else {
+    (0, _index6.observe)(vm._data = {}, true /* asRootData */);
+  }
+
+  if (options.computed) initComputed(vm, options.computed);
+
   var compiled = (0, _index2.default)(template);
 
   vm._render = function () {
@@ -654,17 +675,24 @@ Vue.prototype._init = function (options) {
   };
 };
 
-Vue.prototype._initData = function (data) {
+Vue.prototype._initData = function () {
   var vm = this;
+  var data = vm.$options.data;
+  data = vm._data = data || {}; // 把 data 所有属性代理到 vm._data 上
+
   if (!(0, _index5.isPlainObject)(data)) {
     data = {};
   }
-
-  for (var key in data) {
-    if ((0, _index5.hasOwn)(data, key)) {
-      vm[key] = data[key];
+  var keys = Object.keys(data);
+  var props = vm.$options.props;
+  var i = keys.length;
+  while (i--) {
+    if (!(0, _index5.isReserved)(keys[i])) {
+      // vm._xx vm.$xxx 都是vm的内部/外部方法，所以不能代理到data上
+      proxy(vm, '_data', keys[i]); // 把 vm.abc 代理到 vm._data.abc
     }
   }
+  (0, _index6.observe)(data, this);
 };
 
 Vue.prototype._update = function () {
@@ -686,6 +714,48 @@ Vue.prototype.$mount = function (el) {
   vm._vnode = document.getElementById(el);
   this._update();
 };
+
+var sharedPropertyDefinition = {
+  enumerable: true,
+  configurable: true,
+  get: _index5.noop,
+  set: _index5.noop
+};
+
+function proxy(target, sourceKey, key) {
+  sharedPropertyDefinition.get = function proxyGetter() {
+    return this[sourceKey][key];
+  };
+  sharedPropertyDefinition.set = function proxySetter(val) {
+    this[sourceKey][key] = val;
+  };
+  Object.defineProperty(target, key, sharedPropertyDefinition);
+}
+
+function initComputed(vm, computed) {
+  for (var key in computed) {
+    var userDef = computed[key];
+    var getter = typeof userDef === 'function' ? userDef : userDef.get;
+
+    if (!(key in vm)) {
+      defineComputed(vm, key, userDef);
+    }
+  }
+}
+
+function defineComputed(target, key, userDef) {
+  if (typeof userDef === 'function') {
+    // computed传入function的话，不可写
+    sharedPropertyDefinition.get = function () {
+      return userDef.call(target);
+    };
+    sharedPropertyDefinition.set = _index5.noop;
+  } else {
+    sharedPropertyDefinition.get = userDef.get ? userDef.get : _index5.noop;
+    sharedPropertyDefinition.set = userDef.set ? userDef.set : _index5.noop;
+  }
+  Object.defineProperty(target, key, sharedPropertyDefinition);
+}
 
 /***/ }),
 /* 8 */
@@ -1051,8 +1121,7 @@ var _debug = __webpack_require__(0);
 
 var _attrs = __webpack_require__(6);
 
-var dirRE = exports.dirRE = /^v-|^:/;
-var bindRE = /^:|^v-bind:/;
+var dirRE = exports.dirRE = /^:/;
 var forAliasRE = exports.forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/;
 var forIteratorRE = exports.forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/;
 
@@ -1301,15 +1370,12 @@ function processAttrs(el) {
       // mark element as dynamic
       el.hasBindings = true;
 
-      if (bindRE.test(name)) {
-        // :xxx 或者 v-bind:xxx
-        name = name.replace(bindRE, '');
+      name = name.replace(dirRE, '');
 
-        if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
-          addProp(el, name, value);
-        } else {
-          addAttr(el, name, value);
-        }
+      if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
+        addProp(el, name, value);
+      } else {
+        addAttr(el, name, value);
       }
     } else {
       addAttr(el, name, JSON.stringify(value));
@@ -1717,7 +1783,7 @@ function patchVnode(oldVnode, vnode, removeOnly) {
   }
 }
 
-function patch(oldVnode, vnode) {
+function patch(oldVnode, vnode, parentElm) {
   var isInitialPatch = false;
 
   var isRealElement = isDef(oldVnode.nodeType);
@@ -1732,11 +1798,11 @@ function patch(oldVnode, vnode) {
     //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
     //然后把以前的oldVnode全部移除掉
     var oldElm = oldVnode.elm;
-    var parentElm = nodeOps.parentNode(oldElm);
-    createElm(vnode, parentElm, nodeOps.nextSibling(oldElm));
+    var _parentElm = nodeOps.parentNode(oldElm);
+    createElm(vnode, _parentElm, nodeOps.nextSibling(oldElm));
 
-    if (parentElm !== null) {
-      removeVnodes(parentElm, [oldVnode], 0, 0);
+    if (_parentElm !== null) {
+      removeVnodes(_parentElm, [oldVnode], 0, 0);
     }
   }
 
@@ -1757,6 +1823,77 @@ var _index2 = _interopRequireDefault(_index);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 window.Vue = _index2.default;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.observe = observe;
+exports.defineReactive = defineReactive;
+
+var _index = __webpack_require__(5);
+
+function observe(obj, vm) {
+  if (!(0, _index.isObject)(obj)) {
+    return;
+  }
+
+  var keys = Object.keys(obj);
+  for (var i = 0; i < keys.length; i++) {
+    defineReactive(obj, keys[i], obj[keys[i]], vm);
+  }
+}
+
+function defineReactive(obj, key, val, vm) {
+  observe(val);
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter() {
+      return val;
+    },
+    set: function reactiveSetter(newVal) {
+      var value = val;
+
+      if (newVal === value) {
+        return;
+      }
+
+      // console.log("newVal = ", newVal)
+      val = newVal;
+      observe(newVal);
+      // update
+      vm && vm._update();
+    }
+  });
+}
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isReserved = isReserved;
+/**
+ * Check if a string starts with $ or _
+ */
+function isReserved(str) {
+  // '$' (charCode) 0x24
+  // '_' (charCode) 0x5F
+  var c = (str + '').charCodeAt(0);
+  return c === 0x24 || c === 0x5F;
+}
 
 /***/ })
 /******/ ]);
