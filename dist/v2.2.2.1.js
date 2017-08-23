@@ -310,7 +310,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     with (this) {
       return _c('div', undefined, [
         _c('span', {
-          attrs: { name : 'test'}
+          attrs: { name : 'test' }
         }, [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
@@ -1051,7 +1051,8 @@ var _debug = __webpack_require__(0);
 
 var _attrs = __webpack_require__(6);
 
-var dirRE = exports.dirRE = /^:/;
+var dirRE = exports.dirRE = /^v-|^:/;
+var bindRE = /^:|^v-bind:/;
 var forAliasRE = exports.forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/;
 var forIteratorRE = exports.forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/;
 
@@ -1300,12 +1301,15 @@ function processAttrs(el) {
       // mark element as dynamic
       el.hasBindings = true;
 
-      name = name.replace(dirRE, '');
+      if (bindRE.test(name)) {
+        // :xxx 或者 v-bind:xxx
+        name = name.replace(bindRE, '');
 
-      if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
-        addProp(el, name, value);
-      } else {
-        addAttr(el, name, value);
+        if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
+          addProp(el, name, value);
+        } else {
+          addAttr(el, name, value);
+        }
       }
     } else {
       addAttr(el, name, JSON.stringify(value));
