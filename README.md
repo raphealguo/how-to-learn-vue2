@@ -40,27 +40,27 @@
 
 		还可以阅读一下番外篇: [1.2.1 一个兼容性更佳的HTML parser](./articles/1.2.1.md)
 
-	* [1.3 构建一个最简单的数据绑定的 Vue](./articles/1.3.md) (源码总共945行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.3/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.2.1...1.3)))
+	* [1.3 构建一个最简单的数据绑定的 Vue](./articles/1.3.md) (源码总共945行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/1.3/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.2.1...1.3))
 
 		前边2节的代码已经让我们有足够的基础可以构造一个简单的 Vue 类，在这一篇文章会介绍如何在 Vue 模板语法新增语法糖的流程。
 
 2. 第二章 Vue雏形
 
-	* [2.1 VNode 的属性 attrs 和 props](./articles/2.1.md) (源码总共1112行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.3...2.1)))
+	* [2.1 VNode 的属性 attrs 和 props](./articles/2.1.md) (源码总共1112行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/1.3...2.1))
 
 		在前边我们忽略了 Dom 元素的属性，我们这一节就把这个补齐，同时从这一节开始我们来逐步完善一个 Vue 的 todo 案例。
 
 	* 2.2 控制语句
 
-		* [2.2.1 条件渲染 v-if, v-else-if, v-else](./articles/2.2.1.md) (源码总共1237行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.1...2.2.1)))
+		* [2.2.1 条件渲染 v-if, v-else-if, v-else](./articles/2.2.1.md) (源码总共1237行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.1/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.1...2.2.1))
 
 			往往我们需要通过控制某个状态显示或者隐藏界面的某部分，这里就需要用到 if else 的控制语句。
 
-		* [2.2.2 列表渲染 v-for](./articles/2.2.2.md) (源码总共1371行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.2/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.1...2.2.2)))
+		* [2.2.2 列表渲染 v-for](./articles/2.2.2.md) (源码总共1371行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.2.2/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.2.1...2.2.2))
 
 			这一节我们更新了 todo 的案例，支持 v-for 语法，可以传递一个数组进行列表渲染。
 
-			还可以阅读番外篇了解如何改善 VNode 的 patch 算法减少列表 DOM 大规模重绘 [2.2.2.1 列表渲染 v-for 的 key](./2.2.2.1.md)。
+			想了解如何改善 VNode 的 patch 算法减少列表 DOM 大规模重绘，还可以阅读番外篇: [2.2.2.1 列表渲染 v-for 的 key](./2.2.2.1.md)。
 
 
 	* 2.3 数据绑定
