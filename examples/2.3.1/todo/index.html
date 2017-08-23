@@ -18,7 +18,7 @@
       <section class="main" :style="!todos.length?'display:none;':''">
         <input class="toggle-all" type="checkbox">
         <ul class="todo-list">
-          <li class="todo" v-for="(todo, index) in todos" :key="todo" :class="(todo.completed ? 'completed' : '') + (todo == editedTodo ? 'editing' : '')">
+          <li class="todo" v-for="(todo, index) in filteredTodos" :key="todo" :class="(todo.completed ? 'completed' : '') + (todo == editedTodo ? 'editing' : '')">
             <div class="view">
               <input class="toggle" type="checkbox" :checked="todo.completed">
               <label>{{todo.title}}</label>
@@ -30,21 +30,23 @@
       </section>
       <footer class="footer">
         <span class="todo-count">
-          <strong>remaining</strong> left
+          <strong>{{remaining}}</strong> left
         </span>
         <ul class="filters">
           <li><a href="#/all" :class="visibility == 'all' ? 'selected' : ''">All</a></li>
           <li><a href="#/active" :class="visibility == 'active' ? 'selected' : ''">Active</a></li>
           <li><a href="#/completed" :class="visibility == 'completed' ? 'selected' : ''">Completed</a></li>
         </ul>
-        <button class="clear-completed">
+        <button class="clear-completed" :style="todos.length > remaining?'':'display:none;'">
           Clear completed
         </button>
       </footer>
     </section>
     </script>
-    <script src="../../../dist/v2.2.2.js"></script>
+    <script src="../../../dist/v2.3.1.js"></script>
+    <script src="node_modules/director/build/director.js"></script>
     <script src="js/store.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/routes.js"></script>
   </body>
 </html>
