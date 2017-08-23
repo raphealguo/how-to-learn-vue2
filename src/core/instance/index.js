@@ -35,7 +35,7 @@ Vue.prototype._init = function (options) {
   if (options.data) {
     this._initData()
   } else {
-    observe(vm._data = {}, true /* asRootData */)
+    observe(vm._data = {}, vm)
   }
 
   if (options.computed) initComputed(vm, options.computed)
