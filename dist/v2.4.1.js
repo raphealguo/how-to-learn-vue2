@@ -1110,7 +1110,7 @@ Vue.prototype._init = function (options) {
   if (options.data) {
     this._initData();
   } else {
-    (0, _index6.observe)(vm._data = {}, true /* asRootData */);
+    (0, _index6.observe)(vm._data = {}, vm);
   }
 
   if (options.computed) initComputed(vm, options.computed);
@@ -1609,7 +1609,7 @@ var _debug = __webpack_require__(1);
 var _attrs = __webpack_require__(8);
 
 var dirRE = exports.dirRE = /^v-|^:/;
-var bindRE = /^:/;
+var bindRE = /^:|^v-bind:/;
 var onRE = /^v-on:/;
 
 var forAliasRE = exports.forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/;
@@ -1862,8 +1862,9 @@ function processAttrs(el) {
       el.hasBindings = true;
 
       if (bindRE.test(name)) {
-        // :xxx 开头
+        // :xxx 或者 v-bind:xxx
         name = name.replace(bindRE, '');
+
         if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value);
         } else {
@@ -2748,7 +2749,7 @@ function patchVnode(oldVnode, vnode, removeOnly) {
   }
 }
 
-function patch(oldVnode, vnode, parentElm) {
+function patch(oldVnode, vnode) {
   var isInitialPatch = false;
 
   var isRealElement = isDef(oldVnode.nodeType);
@@ -2763,11 +2764,11 @@ function patch(oldVnode, vnode, parentElm) {
     //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
     //然后把以前的oldVnode全部移除掉
     var oldElm = oldVnode.elm;
-    var _parentElm = nodeOps.parentNode(oldElm);
-    createElm(vnode, _parentElm, nodeOps.nextSibling(oldElm));
+    var parentElm = nodeOps.parentNode(oldElm);
+    createElm(vnode, parentElm, nodeOps.nextSibling(oldElm));
 
-    if (_parentElm !== null) {
-      removeVnodes(_parentElm, [oldVnode], 0, 0);
+    if (parentElm !== null) {
+      removeVnodes(parentElm, [oldVnode], 0, 0);
     }
   }
 
