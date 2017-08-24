@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 20);
+/******/ 	return __webpack_require__(__webpack_require__.s = 22);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -89,7 +89,7 @@ Object.keys(_util).forEach(function (key) {
   });
 });
 
-var _lang = __webpack_require__(16);
+var _lang = __webpack_require__(17);
 
 Object.keys(_lang).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -101,7 +101,7 @@ Object.keys(_lang).forEach(function (key) {
   });
 });
 
-var _env = __webpack_require__(15);
+var _env = __webpack_require__(16);
 
 Object.keys(_env).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -366,7 +366,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.generate = generate;
 
-var _events = __webpack_require__(21);
+var _events = __webpack_require__(10);
 
 var _index = __webpack_require__(5);
 
@@ -573,7 +573,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = compile;
 
-var _index = __webpack_require__(11);
+var _index = __webpack_require__(12);
 
 var _debug = __webpack_require__(1);
 
@@ -1057,7 +1057,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = Vue;
 
-var _patch = __webpack_require__(19);
+var _patch = __webpack_require__(21);
 
 var _patch2 = _interopRequireDefault(_patch);
 
@@ -1073,7 +1073,7 @@ var _index5 = __webpack_require__(0);
 
 var _vnode = __webpack_require__(3);
 
-var _index6 = __webpack_require__(14);
+var _index6 = __webpack_require__(15);
 
 var _watcher = __webpack_require__(7);
 
@@ -1246,6 +1246,39 @@ Vue.delete = _index6.del;
 
 /***/ }),
 /* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.genHandlers = genHandlers;
+function genHandlers(events) {
+  var res = 'on:{';
+  for (var name in events) {
+    res += '"' + name + '":' + genHandler(name, events[name]) + ',';
+  }
+  return res.slice(0, -1) + '}';
+}
+
+// v-on:click="clickme"
+// name='click'   handler="clickme"
+function genHandler(name, handler) {
+  if (!handler) {
+    return 'function(){}';
+  } else if (Array.isArray(handler)) {
+    return '[' + handler.map(function (handler) {
+      return genHandler(name, handler);
+    }).join(',') + ']';
+  } else {
+    return handler.value;
+  }
+}
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1588,7 +1621,7 @@ function parseHTML(html, options) {
 }
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1600,9 +1633,9 @@ Object.defineProperty(exports, "__esModule", {
 exports.forIteratorRE = exports.forAliasRE = exports.dirRE = undefined;
 exports.parse = parse;
 
-var _htmlParser = __webpack_require__(10);
+var _htmlParser = __webpack_require__(11);
 
-var _textParser = __webpack_require__(12);
+var _textParser = __webpack_require__(13);
 
 var _debug = __webpack_require__(1);
 
@@ -1931,7 +1964,7 @@ function addHandler(el, name, value) {
 }
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1974,7 +2007,7 @@ function parseText(text) {
 }
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2031,7 +2064,7 @@ var arrayMethods = exports.arrayMethods = Object.create(arrayProto)
 });
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2053,7 +2086,7 @@ var _dep = __webpack_require__(6);
 
 var _dep2 = _interopRequireDefault(_dep);
 
-var _array = __webpack_require__(13);
+var _array = __webpack_require__(14);
 
 var _index = __webpack_require__(0);
 
@@ -2307,7 +2340,7 @@ function dependArray(value) {
 }
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2369,7 +2402,7 @@ if (typeof Set !== 'undefined' && isNative(Set)) {
 exports._Set = _Set;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2423,7 +2456,7 @@ function parsePath(path) {
 }
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2455,7 +2488,92 @@ function updateDOMProps(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 18 */
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.updateDOMListeners = updateDOMListeners;
+
+var _index = __webpack_require__(0);
+
+var target = void 0;
+
+function add(event, handler, capture) {
+  target.addEventListener(event, handler, capture);
+}
+
+function remove(event, handler, capture, _target) {
+  (_target || target).removeEventListener(event, handler, capture);
+}
+
+function createFnInvoker(fns) {
+  function invoker() {
+    var fns = invoker.fns;
+    if (Array.isArray(fns)) {
+      for (var i = 0; i < fns.length; i++) {
+        fns[i].apply(null, arguments);
+      }
+    } else {
+      // return handler return value for single handlers
+      return fns.apply(null, arguments);
+    }
+  }
+  invoker.fns = fns;
+  return invoker;
+}
+
+function updateListeners(on, oldOn) {
+  var name = void 0,
+      cur = void 0,
+      old = void 0,
+      event = void 0;
+  for (name in on) {
+    cur = on[name];
+    old = oldOn[name];
+    event = { name: name, capture: false };
+    if (!cur) {
+      // v-on:click="clickme" 找不到clickme同名方法定义
+      (0, _index.warn)('Invalid handler for event "' + event.name + '": got ' + String(cur));
+    } else if (!old) {
+      // 旧vnode没有on此事件
+      if (!cur.fns) {
+        // 下次 patch 时就不用重新再包装 listenerCb
+        cur = on[name] = createFnInvoker(cur);
+      }
+      add(event.name, cur, event.capture);
+    } else if (cur !== old) {
+      // 旧vnode和新vnode都有on同个事件，并且listenerCb指向不同，只要把当前的listenerCb指向cur的即可
+      old.fns = cur;
+      on[name] = old;
+    }
+  }
+
+  // 把旧的监听移除掉
+  for (name in oldOn) {
+    if (!on[name]) {
+      event = { name: name, capture: false };
+      remove(event.name, oldOn[name], event.capture);
+    }
+  }
+}
+
+function updateDOMListeners(oldVnode, vnode) {
+  if (!oldVnode.data.on && !vnode.data.on) {
+    return;
+  }
+  var on = vnode.data.on || {};
+  var oldOn = oldVnode.data.on || {};
+  target = vnode.elm;
+  updateListeners(on, oldOn);
+}
+
+/***/ }),
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2522,7 +2640,7 @@ function setAttribute(node, key, val) {
 }
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2534,7 +2652,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.emptyNode = undefined;
 exports.default = patch;
 
-var _nodeOps = __webpack_require__(18);
+var _nodeOps = __webpack_require__(20);
 
 var nodeOps = _interopRequireWildcard(_nodeOps);
 
@@ -2544,9 +2662,9 @@ var _vnode2 = _interopRequireDefault(_vnode);
 
 var _attrs = __webpack_require__(8);
 
-var _domProps = __webpack_require__(17);
+var _domProps = __webpack_require__(18);
 
-var _events = __webpack_require__(22);
+var _events = __webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2776,7 +2894,7 @@ function patch(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2789,124 +2907,6 @@ var _index2 = _interopRequireDefault(_index);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 window.Vue = _index2.default;
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.genHandlers = genHandlers;
-function genHandlers(events) {
-  var res = 'on:{';
-  for (var name in events) {
-    res += '"' + name + '":' + genHandler(name, events[name]) + ',';
-  }
-  return res.slice(0, -1) + '}';
-}
-
-// v-on:click="clickme"
-// name='click'   handler="clickme"
-function genHandler(name, handler) {
-  if (!handler) {
-    return 'function(){}';
-  } else if (Array.isArray(handler)) {
-    return '[' + handler.map(function (handler) {
-      return genHandler(name, handler);
-    }).join(',') + ']';
-  } else {
-    return handler.value;
-  }
-}
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.updateDOMListeners = updateDOMListeners;
-
-var _index = __webpack_require__(0);
-
-var target = void 0;
-
-function add(event, handler, capture) {
-  target.addEventListener(event, handler, capture);
-}
-
-function remove(event, handler, capture, _target) {
-  (_target || target).removeEventListener(event, handler, capture);
-}
-
-function createFnInvoker(fns) {
-  function invoker() {
-    var fns = invoker.fns;
-    if (Array.isArray(fns)) {
-      for (var i = 0; i < fns.length; i++) {
-        fns[i].apply(null, arguments);
-      }
-    } else {
-      // return handler return value for single handlers
-      return fns.apply(null, arguments);
-    }
-  }
-  invoker.fns = fns;
-  return invoker;
-}
-
-function updateListeners(on, oldOn) {
-  var name = void 0,
-      cur = void 0,
-      old = void 0,
-      event = void 0;
-  for (name in on) {
-    cur = on[name];
-    old = oldOn[name];
-    event = { name: name, capture: false };
-    if (!cur) {
-      // v-on:click="clickme" 找不到clickme同名方法定义
-      (0, _index.warn)('Invalid handler for event "' + event.name + '": got ' + String(cur));
-    } else if (!old) {
-      // 旧vnode没有on此事件
-      if (!cur.fns) {
-        // 下次 patch 时就不用重新再包装 listenerCb
-        cur = on[name] = createFnInvoker(cur);
-      }
-      add(event.name, cur, event.capture);
-    } else if (cur !== old) {
-      // 旧vnode和新vnode都有on同个事件，并且listenerCb指向不同，只要把当前的listenerCb指向cur的即可
-      old.fns = cur;
-      on[name] = old;
-    }
-  }
-
-  // 把旧的监听移除掉
-  for (name in oldOn) {
-    if (!on[name]) {
-      event = { name: name, capture: false };
-      remove(event.name, oldOn[name], event.capture);
-    }
-  }
-}
-
-function updateDOMListeners(oldVnode, vnode) {
-  if (!oldVnode.data.on && !vnode.data.on) {
-    return;
-  }
-  var on = vnode.data.on || {};
-  var oldOn = oldVnode.data.on || {};
-  target = vnode.elm;
-  updateListeners(on, oldOn);
-}
 
 /***/ })
 /******/ ]);
