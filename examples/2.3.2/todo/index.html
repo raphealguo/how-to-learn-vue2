@@ -1,0 +1,52 @@
+<!doctype html>
+<html data-framework="vue">
+  <head>
+    <meta charset="utf-8">
+    <title>Vue.js • TodoMVC</title>
+    <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+    <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+  </head>
+  <body>
+    <div id="todoapp">
+    </div>
+    <script id="tmpl" type="text/html">
+    <section class="todoapp">
+      <header class="header">
+        <h1>todos</h1>
+        <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-bind:value="newTodo">
+      </header>
+      <section class="main" :style="!todos.length?'display:none;':''">
+        <input class="toggle-all" type="checkbox">
+        <ul class="todo-list">
+          <li class="todo" v-for="(todo, index) in filteredTodos" :key="todo" :class="(todo.completed ? 'completed' : '') + (todo == editedTodo ? 'editing' : '')">
+            <div class="view">
+              <input class="toggle" type="checkbox" :checked="todo.completed">
+              <label>{{todo.title}}</label>
+              <button class="destroy"></button>
+            </div>
+            <input class="edit" type="text" :value="todo.title">
+          </li>
+        </ul>
+      </section>
+      <footer class="footer">
+        <span class="todo-count">
+          <strong>{{remaining}}</strong> left
+        </span>
+        <ul class="filters">
+          <li><a href="#/all" :class="visibility == 'all' ? 'selected' : ''">All</a></li>
+          <li><a href="#/active" :class="visibility == 'active' ? 'selected' : ''">Active</a></li>
+          <li><a href="#/completed" :class="visibility == 'completed' ? 'selected' : ''">Completed</a></li>
+        </ul>
+        <button class="clear-completed" :style="todos.length > remaining?'':'display:none;'">
+          Clear completed
+        </button>
+      </footer>
+    </section>
+    </script>
+    <script src="../../../dist/v2.3.2.js"></script>
+    <script src="node_modules/director/build/director.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/routes.js"></script>
+  </body>
+</html>
