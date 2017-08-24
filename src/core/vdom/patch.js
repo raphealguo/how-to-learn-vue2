@@ -2,6 +2,7 @@ import * as nodeOps from './node-ops'
 import VNode from './vnode'
 import { updateAttrs } from './attrs'
 import { updateDOMProps } from './dom-props'
+import { updateDOMListeners } from './events'
 
 export const emptyNode = new VNode('', {}, [])
 
@@ -53,6 +54,7 @@ function createElm (vnode, parentElm, refElm) {
     // 属性
     updateAttrs(emptyNode, vnode)
     updateDOMProps(emptyNode, vnode)
+    updateDOMListeners(emptyNode, vnode)
 
     insert(parentElm, vnode.elm, refElm)
   } else { // 文本节点
@@ -181,6 +183,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   if (hasData) {
     updateAttrs(oldVnode, vnode)
     updateDOMProps(oldVnode, vnode)
+    updateDOMListeners(oldVnode, vnode)
   }
 
   if (isUndef(vnode.text)) {
@@ -199,7 +202,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode) {
+export default function patch (oldVnode, vnode, parentElm) {
   let isInitialPatch = false
 
   const isRealElement = isDef(oldVnode.nodeType)

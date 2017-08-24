@@ -16,6 +16,7 @@ import {
   hasOwn,
   isReserved,
   isPlainObject,
+  bind,
   noop
 } from '../util/index'
 
@@ -42,10 +43,13 @@ Vue.prototype._init = function (options) {
   vm._isVue = true
 
   vm._watchers = []
+
+  if (options.methods) initMethods(vm, options.methods)
+
   if (options.data) {
     this._initData()
   } else {
-    observe(vm._data = {}, vm)
+    observe(vm._data = {}, true /* asRootData */)
   }
 
   if (options.computed) initComputed(vm, options.computed)
@@ -148,6 +152,12 @@ function defineComputed (target, key, userDef) {
     sharedPropertyDefinition.set = userDef.set ? userDef.set : noop
   }
   Object.defineProperty(target, key, sharedPropertyDefinition)
+}
+
+function initMethods(vm, methods) {
+  for (const key in methods) {
+    vm[key] = methods[key] == null ? noop : bind(methods[key], vm)
+  }
 }
 
 Vue.prototype.$set = set
