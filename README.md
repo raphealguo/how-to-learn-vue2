@@ -71,7 +71,9 @@
 
 			在之前的例子中，我们总是通过 vm.setData( { a:1, b:2 /* 需要填写整个完整的 data */} ) 来改变数据，从而引起界面的响应式变化。为了提高开发效率和可读性，我们更希望使用 vm.a = 3 来修改值，从而更新视图。
 
-		* 2.3.2 深度追踪依赖变化
+		* [2.3.2 深度追踪依赖变化](https://github.com/raphealguo/how-to-learn-vue2-blob/blob/master/articles/2.3.2.md) (源码总共2245行，[查看代码](https://github.com/raphealguo/how-to-learn-vue2/tree/2.3.2/src)，[查看新增代码](https://github.com/raphealguo/how-to-learn-vue2/compare/2.3.1...2.3.2))
+
+			在 2.3.1 节中，只要任何数据变化都一定会引起 VNode 树的更新计算，显然不是最高效的，因为界面不一定绑定了所有 vm 的所有属性，那些没被绑定的属性的更新不应该引起整个 vm 的 VNode 树计算，所以我们要追踪整个 VNode 树依赖的变化。
 
 	* 2.4 事件处理器
 
