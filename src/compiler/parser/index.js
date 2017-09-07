@@ -4,11 +4,11 @@ import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
 
 export const dirRE = /^v-|^:/
-const bindRE = /^:|^v-bind:/
-const onRE = /^v-on:/
-
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
 export const forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/
+const bindRE = /^:/
+const onRE = /^v-on:/
+const modifierRE = /\.[^.]+/g
 
 function makeAttrsMap (attrs){
   const map = {}
@@ -245,7 +245,7 @@ function addIfCondition (el, condition) {
 
 function processAttrs (el) {
   const list = el.attrsList
-  let i, l, name, value
+  let i, l, name, value, modifiers
   for (i = 0, l = list.length; i < l; i++) {
     name  = list[i].name
     value = list[i].value
@@ -253,10 +253,14 @@ function processAttrs (el) {
     if (dirRE.test(name)) { // v-xxx :xxx 开头的
       // mark element as dynamic
       el.hasBindings = true
+      // modifiers
+      modifiers = parseModifiers(name)
+      if (modifiers) {
+        name = name.replace(modifierRE, '')
+      }
 
-      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
+      if (bindRE.test(name)) { // :xxx 开头
         name = name.replace(bindRE, '')
-
         if (mustUseProp(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value)
         } else {
@@ -264,7 +268,7 @@ function processAttrs (el) {
         }
       } else if (onRE.test(name)) { // v-on开头  v-on:click="xxxx"
         name = name.replace(onRE, '') // name='click'  value="xxxx"
-        addHandler(el, name, value)
+        addHandler(el, name, value, modifiers)
       }
     } else {
       addAttr(el, name, JSON.stringify(value))
@@ -306,10 +310,20 @@ function getAndRemoveAttr (el, name) {
   return val
 }
 
-function addHandler (el, name, value) {
+function addHandler (el, name, value, modifiers) {
+  // check capture modifier
+  if (modifiers && modifiers.capture) {
+    delete modifiers.capture
+    name = '!' + name // mark the event as captured
+  }
+  if (modifiers && modifiers.once) {
+    delete modifiers.once
+    name = '~' + name // mark the event as once
+  }
+
   let events
   events = el.events || (el.events = {})
-  const newHandler = { value }
+  const newHandler = { value, modifiers }
   const handlers = events[name]
   /* istanbul ignore if */
   if (Array.isArray(handlers)) {
@@ -318,5 +332,14 @@ function addHandler (el, name, value) {
     events[name] = [handlers, newHandler]
   } else {
     events[name] = newHandler
+  }
+}
+
+function parseModifiers (name) {
+  const match = name.match(modifierRE)
+  if (match) {
+    const ret = {}
+    match.forEach(m => { ret[m.slice(1)] = true })
+    return ret
   }
 }

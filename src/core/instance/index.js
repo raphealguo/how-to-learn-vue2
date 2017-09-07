@@ -32,6 +32,7 @@ Vue.prototype._c = createElementVNode
 Vue.prototype._v = createTextVNode
 Vue.prototype._s = _toString
 Vue.prototype._l = renderList
+Vue.prototype._k = checkKeyCodes
 Vue.prototype._e = createEmptyVNode
 
 Vue.prototype._init = function (options) {
@@ -49,7 +50,7 @@ Vue.prototype._init = function (options) {
   if (options.data) {
     this._initData()
   } else {
-    observe(vm._data = {}, vm)
+    observe(vm._data = {}, true /* asRootData */)
   }
 
   if (options.computed) initComputed(vm, options.computed)
@@ -178,3 +179,16 @@ Vue.prototype.$watch = function (expOrFn, cb, options) {
 
 Vue.set = set
 Vue.delete = del
+
+/**
+ * Runtime helper for checking keyCodes from config.
+ */
+// _k($event.keyCode,"enter",13)
+function checkKeyCodes (eventKeyCode, key, builtInAlias) {
+  const keyCodes = builtInAlias
+  if (Array.isArray(keyCodes)) {
+    return keyCodes.indexOf(eventKeyCode) === -1
+  } else {
+    return keyCodes !== eventKeyCode
+  }
+}

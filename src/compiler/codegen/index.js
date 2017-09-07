@@ -12,6 +12,9 @@ import { warn } from 'core/util/debug'
       <li v-for="(item, index) in list">{{index}} : {{item}}</li>
     </ul>
     <button v-on:click="clickme">click me</button>
+    <button v-on:click.stop="console.log(1)">click me</button>
+    <button v-on:click.stop="clickme">click me</button>
+    <button v-on:keydown.enter.10="click">click me</button>
   </div>
 
   生成函数：
@@ -44,6 +47,22 @@ import { warn } from 'core/util/debug'
 
         // v-click    clickme == vm["clickme"].bind(vm)
         _c('button', { on:{"click":clickme} }, [_v("click me")])
+
+        // v-on:click.stop="console.log(1)"
+        // click 需要产生一个闭包的handler，.stop等修饰符会作为这个handler的前置条件
+        _c('button', { on:{"click": function($event){ $event.stopPropagation(); console.log(1) }}}, [_v("click me")])
+
+        // v-on:click.stop="click"
+        // 这种和上边例子的区别在于，click是一个vm的method名字，需要生成$event参数给他
+        _c('button', { on:{"click": function($event){ $event.stopPropagation(); click($event) }}}, [_v("click me")])
+
+        // v-on:keydown.enter.10="click"
+        // 新增_k方法，用于判断
+        _c('button',{on:{"keydown": function($event){
+          if($event.keyCode!==10 &&_k($event.keyCode,"enter",13)) return null;
+          click($event)
+        }}},[_v("click me")])
+
       ])
     }
   }
