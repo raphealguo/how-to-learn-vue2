@@ -13,14 +13,14 @@
     <section class="todoapp">
       <header class="header">
         <h1>todos</h1>
-        <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-bind:value="newTodo">
+        <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-bind:value="newTodo" v-on:keydown="inputTodo" v-on:keyup="addTodo">
       </header>
       <section class="main" :style="!todos.length?'display:none;':''">
         <input class="toggle-all" type="checkbox">
         <ul class="todo-list">
           <li class="todo" v-for="(todo, index) in filteredTodos" :key="todo" :class="(todo.completed ? 'completed' : '') + (todo == editedTodo ? 'editing' : '')">
             <div class="view">
-              <input class="toggle" type="checkbox" :checked="todo.completed">
+              <input class="toggle" type="checkbox" v-bind:checked="todo.completed">
               <label>{{todo.title}}</label>
               <button class="destroy"></button>
             </div>
@@ -37,7 +37,7 @@
           <li><a href="#/active" :class="visibility == 'active' ? 'selected' : ''">Active</a></li>
           <li><a href="#/completed" :class="visibility == 'completed' ? 'selected' : ''">Completed</a></li>
         </ul>
-        <button class="clear-completed" :style="todos.length > remaining?'':'display:none;'">
+        <button class="clear-completed" v-on:click="removeCompleted" :style="todos.length > remaining?'':'display:none;'">
           Clear completed
         </button>
       </footer>

@@ -4,13 +4,6 @@
 
   'use strict';
 
-  todoStorage.save([
-    { "title": "item 1", "completed": true },
-    { "title": "item 2", "completed": false },
-    { "title": "item 3", "completed": true },
-    { "title": "item 4", "completed": false }
-  ])
-
   var filters = {
     all: function (todos) {
       return todos;
@@ -46,8 +39,30 @@
         return filters.active(this.todos).length;
       }
     },
+    methods: {
+      inputTodo: function($event){
+        this.newTodo = $event.target.value;
+      },
+      addTodo: function ($event) {
+        if ($event.which !== 13) { return }
+        var value = this.newTodo && this.newTodo.trim();
+        if (!value) {
+          return;
+        }
+        this.todos.push({ title: value, completed: false });
+        this.newTodo = '';
+      },
+      removeCompleted: function () {
+        this.todos = filters.active(this.todos);
+      }
+    }
   });
 
   vm.$mount("todoapp")
 
+  vm.$watch("todos", function(todos){
+    todoStorage.save(todos);
+  }, {
+    deep: true
+  })
 })(window);
