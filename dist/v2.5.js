@@ -3408,7 +3408,7 @@ function patchVnode(oldVnode, vnode, removeOnly) {
   }
 }
 
-function patch(oldVnode, vnode, parentElm) {
+function patch(oldVnode, vnode) {
   var isInitialPatch = false;
 
   var isRealElement = isDef(oldVnode.nodeType);
@@ -3423,11 +3423,11 @@ function patch(oldVnode, vnode, parentElm) {
     //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
     //然后把以前的oldVnode全部移除掉
     var oldElm = oldVnode.elm;
-    var _parentElm = nodeOps.parentNode(oldElm);
-    createElm(vnode, _parentElm, nodeOps.nextSibling(oldElm));
+    var parentElm = nodeOps.parentNode(oldElm);
+    createElm(vnode, parentElm, nodeOps.nextSibling(oldElm));
 
-    if (_parentElm !== null) {
-      removeVnodes(_parentElm, [oldVnode], 0, 0);
+    if (parentElm !== null) {
+      removeVnodes(parentElm, [oldVnode], 0, 0);
     }
   }
 

@@ -22,7 +22,8 @@
 
   var vm = exports.app = new Vue({
 
-    template: document.getElementById("tmpl").innerHTML,
+    // the root element that will be compiled
+    el: '.todoapp',
 
     // app initial state
     data: {
@@ -37,6 +38,16 @@
       },
       remaining: function () {
         return filters.active(this.todos).length;
+      },
+      allDone: {
+        get: function () {
+          return this.remaining === 0;
+        },
+        set: function (value) {
+          this.todos.forEach(function (todo) {
+            todo.completed = value;
+          });
+        }
       }
     },
     methods: {
@@ -94,8 +105,6 @@
       }
     }
   });
-
-  vm.$mount("todoapp")
 
   vm.$watch("todos", function(todos){
     todoStorage.save(todos);
