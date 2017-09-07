@@ -43,8 +43,10 @@
       inputTodo: function($event){
         this.newTodo = $event.target.value;
       },
-      addTodo: function ($event) {
-        if ($event.which !== 13) { return }
+      inputEditTodo: function($event, todo){
+        todo.title = $event.target.value;
+      },
+      addTodo: function () {
         var value = this.newTodo && this.newTodo.trim();
         if (!value) {
           return;
@@ -52,6 +54,41 @@
         this.todos.push({ title: value, completed: false });
         this.newTodo = '';
       },
+
+      removeTodo: function (todo) {
+        var todos = this.todos;
+        if (!todos.length) return
+        var index = todos.indexOf(todo)
+        if (index > -1) {
+          todos.splice(index, 1);
+        }
+      },
+
+      editTodo: function (todo) {
+        this.beforeEditCache = todo.title;
+        this.editedTodo = todo;
+      },
+
+      changeTodo: function (todo) {
+        todo.completed = !todo.completed
+      },
+
+      doneEdit: function (todo) {
+        if (!this.editedTodo) {
+          return;
+        }
+        this.editedTodo = null;
+        todo.title = todo.title.trim();
+        if (!todo.title) {
+          this.removeTodo(todo);
+        }
+      },
+
+      cancelEdit: function (todo) {
+        this.editedTodo = null;
+        todo.title = this.beforeEditCache;
+      },
+
       removeCompleted: function () {
         this.todos = filters.active(this.todos);
       }

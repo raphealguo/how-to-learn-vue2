@@ -1130,7 +1130,7 @@ Vue.prototype._init = function (options) {
   if (options.data) {
     this._initData();
   } else {
-    (0, _index6.observe)(vm._data = {}, true /* asRootData */);
+    (0, _index6.observe)(vm._data = {}, vm);
   }
 
   if (options.computed) initComputed(vm, options.computed);
@@ -1288,11 +1288,14 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.genHandlers = genHandlers;
-// v-on:click="console.log(xxx);xxxx;"
+// v-on:click="function(){}"
+// v-on:click="() => {}"
 var fnExpRE = /^\s*([\w$_]+|\([^)]*?\))\s*=>|^function\s*\(/;
 
 // v-on:click="xxx" // xxx为vm的一个方法名字
 var simplePathRE = /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?']|\[".*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*\s*$/;
+
+//else : // v-on:click="console.log(xxx);xxxx;" // 要被包裹成 function($event) { console.log(xxx);xxxx; }
 
 // keyCode aliases
 var keyCodes = {
@@ -1350,7 +1353,8 @@ function genHandler(name, handler) {
     }).join(',') + ']';
   } else if (!handler.modifiers) {
     // 没有修饰符的话  .stop .prevent .self
-    return handler.value;
+    //支持：v-on:click="removeTodo(todo)" 和 v-on:click="xx"
+    return fnExpRE.test(handler.value) || simplePathRE.test(handler.value) ? handler.value : 'function($event){' + handler.value + '}';
   } else {
     var code = '';
     var keys = [];
@@ -1756,11 +1760,11 @@ var _debug = __webpack_require__(1);
 
 var _attrs = __webpack_require__(8);
 
-var dirRE = exports.dirRE = /^v-|^:/;
+var dirRE = exports.dirRE = /^v-|^@|^:/;
 var forAliasRE = exports.forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/;
 var forIteratorRE = exports.forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/;
-var bindRE = /^:/;
-var onRE = /^v-on:/;
+var bindRE = /^:|^v-bind:/;
+var onRE = /^@|^v-on:/;
 var modifierRE = /\.[^.]+/g;
 
 function makeAttrsMap(attrs) {
@@ -3036,7 +3040,7 @@ function patchVnode(oldVnode, vnode, removeOnly) {
   }
 }
 
-function patch(oldVnode, vnode, parentElm) {
+function patch(oldVnode, vnode) {
   var isInitialPatch = false;
 
   var isRealElement = isDef(oldVnode.nodeType);
@@ -3051,11 +3055,11 @@ function patch(oldVnode, vnode, parentElm) {
     //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
     //然后把以前的oldVnode全部移除掉
     var oldElm = oldVnode.elm;
-    var _parentElm = nodeOps.parentNode(oldElm);
-    createElm(vnode, _parentElm, nodeOps.nextSibling(oldElm));
+    var parentElm = nodeOps.parentNode(oldElm);
+    createElm(vnode, parentElm, nodeOps.nextSibling(oldElm));
 
-    if (_parentElm !== null) {
-      removeVnodes(_parentElm, [oldVnode], 0, 0);
+    if (parentElm !== null) {
+      removeVnodes(parentElm, [oldVnode], 0, 0);
     }
   }
 

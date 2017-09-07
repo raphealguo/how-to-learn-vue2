@@ -1,8 +1,11 @@
-// v-on:click="console.log(xxx);xxxx;"
+// v-on:click="function(){}"
+// v-on:click="() => {}"
 const fnExpRE = /^\s*([\w$_]+|\([^)]*?\))\s*=>|^function\s*\(/
 
 // v-on:click="xxx" // xxx为vm的一个方法名字
 const simplePathRE = /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?']|\[".*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*\s*$/
+
+//else : // v-on:click="console.log(xxx);xxxx;" // 要被包裹成 function($event) { console.log(xxx);xxxx; }
 
 // keyCode aliases
 const keyCodes = {
@@ -55,7 +58,10 @@ function genHandler (name, handler) {
   } else if (Array.isArray(handler)) {
     return `[${handler.map(handler => genHandler(name, handler)).join(',')}]`
   } else if (!handler.modifiers) { // 没有修饰符的话  .stop .prevent .self
-    return handler.value
+    //支持：v-on:click="removeTodo(todo)" 和 v-on:click="xx"
+    return fnExpRE.test(handler.value) || simplePathRE.test(handler.value)
+      ? handler.value
+      : `function($event){${handler.value}}`
   } else {
     let code = ''
     const keys = []

@@ -202,7 +202,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode, parentElm) {
+export default function patch (oldVnode, vnode) {
   let isInitialPatch = false
 
   const isRealElement = isDef(oldVnode.nodeType)

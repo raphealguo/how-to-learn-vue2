@@ -3,11 +3,11 @@ import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
 
-export const dirRE = /^v-|^:/
+export const dirRE = /^v-|^@|^:/
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
 export const forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/
-const bindRE = /^:/
-const onRE = /^v-on:/
+const bindRE = /^:|^v-bind:/
+const onRE = /^@|^v-on:/
 const modifierRE = /\.[^.]+/g
 
 function makeAttrsMap (attrs){
