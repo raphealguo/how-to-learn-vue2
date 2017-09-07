@@ -1,3 +1,3 @@
-import Vue from 'core/instance/index'
+import Vue from 'core/index'
 
 window.Vue = Vue

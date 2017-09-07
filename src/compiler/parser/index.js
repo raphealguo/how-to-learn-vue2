@@ -68,6 +68,7 @@ export function parse (template) {
       processIf(element)
       processKey(element)
 
+      processClass(element)
       processAttrs(element)
 
       if (!root) {
@@ -243,6 +244,17 @@ function addIfCondition (el, condition) {
   el.ifConditions.push(condition)
 }
 
+function processClass (el) {
+  const staticClass = getAndRemoveAttr(el, 'class')
+  if (staticClass) {
+    el.staticClass = JSON.stringify(staticClass)
+  }
+  const classBinding = getBindingAttr(el, 'class', false /* getStatic */)
+  if (classBinding) {
+    el.classBinding = classBinding
+  }
+}
+
 function processAttrs (el) {
   const list = el.attrsList
   let i, l, name, value, modifiers
@@ -259,9 +271,8 @@ function processAttrs (el) {
         name = name.replace(modifierRE, '')
       }
 
-      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
+      if (bindRE.test(name)) { // :xxx 开头
         name = name.replace(bindRE, '')
-
         if (mustUseProp(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value)
         } else {
@@ -285,7 +296,7 @@ function addAttr (el, name, value) {
   (el.attrs || (el.attrs = [])).push({ name, value })
 }
 
-function getBindingAttr (el,  name, getStatic) {
+function getBindingAttr (el, name, getStatic) {
   const dynamicValue = getAndRemoveAttr(el, ':' + name)
   if (dynamicValue != null) {
     return dynamicValue

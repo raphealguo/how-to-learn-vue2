@@ -168,6 +168,14 @@ function genData (el) {
     data += `${genHandlers(el.events)},`
   }
 
+  // class
+  if (el.staticClass) {
+    data += `staticClass:${el.staticClass},`
+  }
+  if (el.classBinding) {
+    data += `class:${el.classBinding},`
+  }
+
   data = data.replace(/,$/, '') + '}'
 
   return data

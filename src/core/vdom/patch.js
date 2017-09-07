@@ -1,6 +1,7 @@
 import * as nodeOps from './node-ops'
 import VNode from './vnode'
 import { updateAttrs } from './attrs'
+import { updateClass } from './class'
 import { updateDOMProps } from './dom-props'
 import { updateDOMListeners } from './events'
 
@@ -53,6 +54,7 @@ function createElm (vnode, parentElm, refElm) {
 
     // 属性
     updateAttrs(emptyNode, vnode)
+    updateClass(emptyNode, vnode)
     updateDOMProps(emptyNode, vnode)
     updateDOMListeners(emptyNode, vnode)
 
@@ -182,6 +184,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   // 更新属性
   if (hasData) {
     updateAttrs(oldVnode, vnode)
+    updateClass(oldVnode, vnode)
     updateDOMProps(oldVnode, vnode)
     updateDOMListeners(oldVnode, vnode)
   }
@@ -202,7 +205,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode) {
+export default function patch (oldVnode, vnode, parentElm) {
   let isInitialPatch = false
 
   const isRealElement = isDef(oldVnode.nodeType)
