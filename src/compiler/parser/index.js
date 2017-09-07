@@ -3,10 +3,12 @@ import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
 
-export const dirRE = /^v-|^:/
-const bindRE = /^:|^v-bind:/
+export const dirRE = /^v-|^@|^:/
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
 export const forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/
+const bindRE = /^:|^v-bind:/
+const onRE = /^@|^v-on:/
+const modifierRE = /\.[^.]+/g
 
 function makeAttrsMap (attrs){
   const map = {}
@@ -66,6 +68,7 @@ export function parse (template) {
       processIf(element)
       processKey(element)
 
+      processClass(element)
       processAttrs(element)
 
       if (!root) {
@@ -241,16 +244,32 @@ function addIfCondition (el, condition) {
   el.ifConditions.push(condition)
 }
 
+function processClass (el) {
+  const staticClass = getAndRemoveAttr(el, 'class')
+  if (staticClass) {
+    el.staticClass = JSON.stringify(staticClass)
+  }
+  const classBinding = getBindingAttr(el, 'class', false /* getStatic */)
+  if (classBinding) {
+    el.classBinding = classBinding
+  }
+}
+
 function processAttrs (el) {
   const list = el.attrsList
-  let i, l, name, value
+  let i, l, name, value, modifiers
   for (i = 0, l = list.length; i < l; i++) {
     name  = list[i].name
     value = list[i].value
 
-    if (dirRE.test(name)) {
+    if (dirRE.test(name)) { // v-xxx :xxx 开头的
       // mark element as dynamic
       el.hasBindings = true
+      // modifiers
+      modifiers = parseModifiers(name)
+      if (modifiers) {
+        name = name.replace(modifierRE, '')
+      }
 
       if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
         name = name.replace(bindRE, '')
@@ -260,6 +279,9 @@ function processAttrs (el) {
         } else {
           addAttr(el, name, value)
         }
+      } else if (onRE.test(name)) { // v-on开头  v-on:click="xxxx"
+        name = name.replace(onRE, '') // name='click'  value="xxxx"
+        addHandler(el, name, value, modifiers)
       }
     } else {
       addAttr(el, name, JSON.stringify(value))
@@ -275,7 +297,7 @@ function addAttr (el, name, value) {
   (el.attrs || (el.attrs = [])).push({ name, value })
 }
 
-function getBindingAttr (el,  name, getStatic) {
+function getBindingAttr (el, name, getStatic) {
   const dynamicValue = getAndRemoveAttr(el, ':' + name)
   if (dynamicValue != null) {
     return dynamicValue
@@ -299,4 +321,38 @@ function getAndRemoveAttr (el, name) {
     }
   }
   return val
+}
+
+function addHandler (el, name, value, modifiers) {
+  // check capture modifier
+  if (modifiers && modifiers.capture) {
+    delete modifiers.capture
+    name = '!' + name // mark the event as captured
+  }
+  if (modifiers && modifiers.once) {
+    delete modifiers.once
+    name = '~' + name // mark the event as once
+  }
+
+  let events
+  events = el.events || (el.events = {})
+  const newHandler = { value, modifiers }
+  const handlers = events[name]
+  /* istanbul ignore if */
+  if (Array.isArray(handlers)) {
+    handlers.push(newHandler)
+  } else if (handlers) {
+    events[name] = [handlers, newHandler]
+  } else {
+    events[name] = newHandler
+  }
+}
+
+function parseModifiers (name) {
+  const match = name.match(modifierRE)
+  if (match) {
+    const ret = {}
+    match.forEach(m => { ret[m.slice(1)] = true })
+    return ret
+  }
 }

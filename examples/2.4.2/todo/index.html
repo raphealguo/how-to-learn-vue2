@@ -1,0 +1,52 @@
+<!doctype html>
+<html data-framework="vue">
+  <head>
+    <meta charset="utf-8">
+    <title>Vue.js • TodoMVC</title>
+    <link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+    <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+  </head>
+  <body>
+    <div id="todoapp">
+    </div>
+    <script id="tmpl" type="text/html">
+    <section class="todoapp">
+      <header class="header">
+        <h1>todos</h1>
+        <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" :value="newTodo" @keydown="inputTodo" @keyup.enter="addTodo">
+      </header>
+      <section class="main" :style="!todos.length?'display:none;':''" v-cloak>
+        <input class="toggle-all" type="checkbox" v-model="allDone">
+        <ul class="todo-list">
+          <li class="todo" v-for="(todo, index) in filteredTodos" :key="todo" :class="{completed: todo.completed, editing: todo == editedTodo}">
+            <div class="view">
+              <input class="toggle" type="checkbox" :checked="todo.completed" @change="changeTodo(todo)">
+              <label @dblclick="editTodo(todo)">{{todo.title}}</label>
+              <button class="destroy" @click="removeTodo(todo)"></button>
+            </div>
+            <input class="edit" type="text" :value="todo.title" @keydown="inputEditTodo($event, todo)" v-todo-focus="todo == editedTodo" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" @keyup.esc="cancelEdit(todo)">
+          </li>
+        </ul>
+      </section>
+      <footer class="footer" v-show="todos.length">
+        <span class="todo-count">
+          <strong v-text="remaining"></strong> {{remaining}} left
+        </span>
+        <ul class="filters">
+          <li><a href="#/all" :class="{selected: visibility == 'all'}">All</a></li>
+          <li><a href="#/active" :class="{selected: visibility == 'active'}">Active</a></li>
+          <li><a href="#/completed" :class="{selected: visibility == 'completed'}">Completed</a></li>
+        </ul>
+        <button class="clear-completed" @click="removeCompleted" :style="todos.length > remaining?'':'display:none;'">
+          Clear completed
+        </button>
+      </footer>
+    </section>
+    </script>
+    <script src="../../../dist/v2.4.2.js"></script>
+    <script src="node_modules/director/build/director.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/routes.js"></script>
+  </body>
+</html>
