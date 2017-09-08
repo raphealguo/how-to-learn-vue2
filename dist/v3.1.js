@@ -901,7 +901,7 @@ function initState(vm) {
   if (opts.data) {
     initData(vm);
   } else {
-    (0, _index.observe)(vm._data = {}, true /* asRootData */);
+    (0, _index.observe)(vm._data = {}, vm);
   }
 
   if (opts.computed) initComputed(vm, opts.computed);
@@ -1654,7 +1654,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     with (this) {
       return _c('div', undefined, [
         _c('span', {
-          attrs: { name : 'test'}
+          attrs: { name : 'test' }
         }, [
           _v("abc" + _s(a) + "xxx" + _s(b) + "def")
         ]),
@@ -2476,8 +2476,9 @@ function processAttrs(el) {
       }
 
       if (bindRE.test(name)) {
-        // :xxx 开头
+        // :xxx 或者 v-bind:xxx
         name = name.replace(bindRE, '');
+
         if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value);
         } else {
@@ -3567,7 +3568,7 @@ function patchVnode(oldVnode, vnode, removeOnly) {
   }
 }
 
-function patch(oldVnode, vnode, parentElm) {
+function patch(oldVnode, vnode) {
   if (!vnode) {
     // 销毁vm的时候 vnode=null
     return;
@@ -3586,11 +3587,11 @@ function patch(oldVnode, vnode, parentElm) {
     //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
     //然后把以前的oldVnode全部移除掉
     var oldElm = oldVnode.elm;
-    var _parentElm = nodeOps.parentNode(oldElm);
-    createElm(vnode, _parentElm, nodeOps.nextSibling(oldElm));
+    var parentElm = nodeOps.parentNode(oldElm);
+    createElm(vnode, parentElm, nodeOps.nextSibling(oldElm));
 
-    if (_parentElm !== null) {
-      removeVnodes(_parentElm, [oldVnode], 0, 0);
+    if (parentElm !== null) {
+      removeVnodes(parentElm, [oldVnode], 0, 0);
     }
   }
 
