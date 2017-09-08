@@ -52,7 +52,7 @@ export function initState (vm) {
   if (opts.watch) initWatch(vm, opts.watch)
 }
 
-const isReservedProp = { key: 1 }
+const isReservedProp = { key: 1, slot: 1 }
 
 function initProps (vm, propsOptions) {
   const propsData = vm.$options.propsData || {}

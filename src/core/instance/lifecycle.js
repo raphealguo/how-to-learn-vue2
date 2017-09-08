@@ -3,6 +3,7 @@ import Watcher from '../observer/watcher'
 import compile from 'compiler/index'
 import { observerState } from '../observer/index'
 import { query } from 'web/util/index'
+import { resolveSlots } from './render-helpers/resolve-slots'
 import {
   warn,
   noop,
@@ -164,7 +165,16 @@ function mountComponent (vm, el) {
 // 当当前子组件的props改变的时候，这里会重新触发vm._props写操作
 // 由于在state.js里边initProps做了订阅 defineReactive(props, key, value)
 // 因此会触发子组件的vm._watcher update，从而触发子组件update
-export function updateChildComponent (vm, propsData) {
+export function updateChildComponent (vm, propsData, parentVnode, renderChildren) {
+  const hasChildren = !!(
+    renderChildren ||               // has new static slots
+    vm.$options._renderChildren     // has old static slots
+  )
+
+  vm.$options._parentVnode = parentVnode
+  vm.$vnode = parentVnode // 子组件的跟节点
+  vm.$options._renderChildren = renderChildren
+
   // update props
   if (propsData && vm.$options.props) {
     // 在下边props[key] = xx的时候 会对孩子的props进行赋值，但是这次赋值是允许的，不应该出warning
@@ -180,6 +190,11 @@ export function updateChildComponent (vm, propsData) {
     observerState.isSettingProps = false
     // keep a copy of raw propsData
     vm.$options.propsData = propsData
+  }
+  // resolve slots + force update if has children
+  if (hasChildren) {
+    vm.$slots = resolveSlots(renderChildren, parentVnode.context)
+    vm.$forceUpdate()
   }
 }
 

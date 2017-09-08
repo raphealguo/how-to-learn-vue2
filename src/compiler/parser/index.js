@@ -67,6 +67,7 @@ export function parse (template) {
       processIf(element)
       processKey(element)
 
+      processSlot(element)
       processClass(element)
       processAttrs(element)
 
@@ -241,6 +242,24 @@ function addIfCondition (el, condition) {
     el.ifConditions = []
   }
   el.ifConditions.push(condition)
+}
+
+function processSlot (el) {
+  if (el.tag === 'slot') { // 子组件声明：<slot name="xxx">
+    el.slotName = getBindingAttr(el, 'name')
+    if (el.key) {
+      warn(
+        `\`key\` does not work on <slot> because slots are abstract outlets ` +
+        `and can possibly expand into multiple elements. ` +
+        `Use the key on a wrapping element instead.`
+      )
+    }
+  } else { // 父组件引用：<div slot="xxx">
+    const slotTarget = getBindingAttr(el, 'slot')
+    if (slotTarget) {
+      el.slotTarget = slotTarget === '""' ? '"default"' : slotTarget
+    }
+  }
 }
 
 function processClass (el) {

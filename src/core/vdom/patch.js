@@ -18,6 +18,7 @@ function sameVnode (vnode1, vnode2) {
   return (
     vnode1.key === vnode2.key &&
     vnode1.tag === vnode2.tag &&
+    vnode1.isComment === vnode2.isComment &&
     !vnode1.data === !vnode2.data
   )
 }
@@ -77,6 +78,9 @@ function createElm (vnode, parentElm, refElm) {
     */
     invokeCreateHooks(vnode)
 
+    insert(parentElm, vnode.elm, refElm)
+  } else if (vnode.isComment) {
+    vnode.elm = nodeOps.createComment(vnode.text)
     insert(parentElm, vnode.elm, refElm)
   } else { // 文本节点
     vnode.elm = nodeOps.createTextNode(vnode.text)

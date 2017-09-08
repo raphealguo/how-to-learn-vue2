@@ -46,7 +46,7 @@ export function createComponent (Ctor, data, context, children, tag) {
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
-    { Ctor, propsData, listeners, tag, children }
+    { Ctor, propsData, listeners, tag, children } // children是父亲传递给子组件的内容，子组件需要把这些节点插到对应的slot里边去
   )
   return vnode
 }
@@ -61,7 +61,9 @@ export function createComponentInstanceForVnode (
     _isComponent: true,
     propsData: vnodeComponentOptions.propsData,
     _componentTag: vnodeComponentOptions.tag,
+    _parentVnode: vnode,
     _parentListeners: vnodeComponentOptions.listeners, // 声明在孩子组件的v-on:xx其实是父亲的method
+    _renderChildren: vnodeComponentOptions.children,  // _renderChildren是父亲传递给子组件的内容，子组件需要把这些节点插到对应的slot里边去
     _parentElm: parentElm || null,
     _refElm: refElm || null
   }
@@ -95,7 +97,12 @@ export function init (vnode, parentElm, refElm) {
 export function prepatch (oldVnode, vnode) {
   const options = vnode.componentOptions
   const child = vnode.componentInstance = oldVnode.componentInstance // 直接更新之前的子组件vm的props即可
-  updateChildComponent(child, options.propsData)
+  updateChildComponent(
+    child,
+    options.propsData,
+    vnode,              // new parent vnode
+    options.children    // 重新看看children需不需要渲染
+  )
 }
 
 function extractProps (data, Ctor) {

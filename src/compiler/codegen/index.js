@@ -85,6 +85,8 @@ function genElement (el){
     return genFor(el)
   } if (el.if && !el.ifProcessed) {
     return genIf(el)
+  } else if (el.tag === 'slot') { // slot
+    return genSlot(el)
   } else {
     let code
     const children = genChildren(el) || '[]'
@@ -175,6 +177,10 @@ function genData (el) {
   if (el.nativeEvents) {
     data += `${genHandlers(el.nativeEvents, true)},`
   }
+  // slot target
+  if (el.slotTarget) {  // 父组件引用：<div slot="a">a</div>
+    data += `slot:${el.slotTarget},`
+  }
 
   // class
   if (el.staticClass) {
@@ -218,6 +224,13 @@ function genText (text) {
     ? text.expression // no need for () because already wrapped in _s()
     : JSON.stringify(text.text)
   })`
+}
+
+function genSlot (el) {
+  const slotName = el.slotName || '"default"'
+  const children = genChildren(el)
+  let res = `_t(${slotName}${children ? `,${children}` : ''}`
+  return res + ')'
 }
 
 function genProps (props) {

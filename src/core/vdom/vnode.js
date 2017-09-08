@@ -17,12 +17,14 @@ export default class VNode {
     this.key = data && data.key
     this.componentOptions = componentOptions
     this.componentInstance = undefined  // 自定义组件的vm实例
+    this.isComment = false              // 用于标记当前是不是一个空节点
   }
 }
 
 export const createEmptyVNode = () => {
   const node = new VNode()
   node.text = ''
+  node.isComment = true
   return node
 }
 
