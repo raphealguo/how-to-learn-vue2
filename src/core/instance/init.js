@@ -1,6 +1,6 @@
 import { initState } from './state'
 import { initLifecycle, callHook } from './lifecycle'
-import { extend } from '../util/index'
+import { extend, mergeOptions } from '../util/index'
 
 let uid = 0
 
@@ -18,7 +18,11 @@ export function initMixin (Vue) {
     // merge options
     // 针对: Sub = Vue.extend(options1); subvm = new Sub(options2);
     // 需要merge静态的 options1 和动态的 options2 到 subvm 上
-    vm.$options = extend(resolveConstructorOptions(vm.constructor), options || {})
+    vm.$options = mergeOptions(
+      resolveConstructorOptions(vm.constructor),
+      options || {},
+      vm
+    )
 
     initLifecycle(vm)
 
@@ -47,7 +51,7 @@ function resolveConstructorOptions (Ctor) {
       Ctor.superOptions = superOptions
 
       // 重新merge一下options
-      options = Ctor.options = extend(superOptions, Ctor.extendOptions)
+      options = Ctor.options = mergeOptions(superOptions, Ctor.extendOptions)
     }
   }
   return options

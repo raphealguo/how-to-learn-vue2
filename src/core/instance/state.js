@@ -51,10 +51,19 @@ export function initState (vm) {
 
 function initData (vm) {
   let data = vm.$options.data
-  data = vm._data = data || {} // 把 data 所有属性代理到 vm._data 上
+  // 把 data 所有属性代理到 vm._data 上
+  // data可以是一个函数：组件的data不应该是静态的obj，应该是一个function，避免组件共享同一个data
+  data = vm._data = typeof data === 'function'
+    ? data.call(vm)
+    : data || {}
 
   if (!isPlainObject(data)) {
     data = {}
+    warn(
+      'data functions should return an object:\n' +
+      'https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function',
+      vm
+    )
   }
   const keys = Object.keys(data)
   const props = vm.$options.props
@@ -99,6 +108,9 @@ function initWatch (vm, watch) {
   for (const key in watch) {
     const handler = watch[key]
     if (Array.isArray(handler)) {
+      // 为什么这里会是数组
+      // Sub = Vue.extend({ watch: {a:funcA }}), subvm = new Sub({ watch: {a:funcB })
+      // 最终subvm的options.watch = { "a": [funcA, funcB] }
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
       }

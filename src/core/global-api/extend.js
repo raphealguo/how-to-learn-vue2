@@ -1,5 +1,5 @@
 /* @flow */
-import { warn, extend } from '../util/index'
+import { warn, extend, mergeOptions } from '../util/index'
 
 export function initExtend (Vue) {
   /**
@@ -35,7 +35,7 @@ export function initExtend (Vue) {
     Sub.cid = cid++
 
     // 把默认的extendOptions和父亲的options merge之后 记录在当前的构造器上，等真正 _init调用的时候再动态merge options
-    Sub.options = extend(Super.options, extendOptions)
+    Sub.options = mergeOptions(Super.options, extendOptions)
 
     // 记录基类
     Sub['super'] = Super
