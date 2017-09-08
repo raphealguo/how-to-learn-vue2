@@ -1,8 +1,8 @@
 import { parseHTML } from './html-parser'
 import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
-import { mustUseProp } from 'core/vdom/attrs'
-import { isPreTag } from 'core/util/element'
+import { mustUseProp } from 'web/util/attrs'
+import { isPreTag } from 'web/util/element'
 
 export const dirRE = /^v-|^@|^:/
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
@@ -270,9 +270,8 @@ function processAttrs (el) {
         name = name.replace(modifierRE, '')
       }
 
-      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
+      if (bindRE.test(name)) { // :xxx 开头
         name = name.replace(bindRE, '')
-
         if (mustUseProp(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value)
         } else {
@@ -334,7 +333,12 @@ function addHandler (el, name, value, modifiers) {
   }
 
   let events
-  events = el.events || (el.events = {})
+  if (modifiers && modifiers.native) { // 原生事件
+    delete modifiers.native
+    events = el.nativeEvents || (el.nativeEvents = {})
+  } else {
+    events = el.events || (el.events = {})
+  }
   const newHandler = { value, modifiers }
   const handlers = events[name]
   /* istanbul ignore if */

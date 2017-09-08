@@ -1,5 +1,6 @@
 import { initState } from './state'
 import { initRender } from './render'
+import { initEvents } from './events'
 import { initLifecycle, callHook } from './lifecycle'
 import { extend, mergeOptions } from '../util/index'
 
@@ -26,6 +27,7 @@ export function initMixin (Vue) {
     )
 
     initLifecycle(vm)
+    initEvents(vm)
     initRender(vm)
     callHook(vm, 'beforeCreate')  // see: https://cn.vuejs.org/v2/api/?#beforeCreate
     initState(vm)

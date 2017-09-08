@@ -172,6 +172,9 @@ function genData (el) {
   if (el.events) {
     data += `${genHandlers(el.events)},`
   }
+  if (el.nativeEvents) {
+    data += `${genHandlers(el.nativeEvents, true)},`
+  }
 
   // class
   if (el.staticClass) {

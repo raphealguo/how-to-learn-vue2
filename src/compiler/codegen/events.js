@@ -42,8 +42,8 @@ const modifierCode = {
   right: genGuard(`$event.button !== 2`)
 }
 
-export function genHandlers (events) {
-  let res = 'on:{'
+export function genHandlers (events, native) {
+  let res = native ? 'nativeOn:{' : 'on:{'
   for (const name in events) {
     res += `"${name}":${genHandler(name, events[name])},`
   }

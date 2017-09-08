@@ -2,7 +2,7 @@ import VNode, { createEmptyVNode } from './vnode'
 import { createComponent } from './create-component'
 import { simpleNormalizeChildren } from './helpers/index'
 import { warn, resolveAsset, isPrimitive } from '../util/index'
-import { isReservedTag } from '../util/element'
+import { isReservedTag } from 'web/util/element'
 
 // 如果放在vnode.js里边容易引起循环依赖
 export function createElementVNode(context, tag, data, children) {

@@ -29,6 +29,14 @@ export function createComponent (Ctor, data, context, children, tag) {
   // 得到父亲传给孩子的属性
   const propsData = extractProps(data, Ctor)
 
+  // extract listeners, since these needs to be treated as
+  // child component listeners instead of DOM listeners
+  // 把当前子组件上声明的v-on收集起来：<my-component :a="a" b="asd" @abc="abc">
+  const listeners = data.on
+  // replace with listeners with .native modifier
+  // 把<my-component @click.native="nativeClic"> 这类修复成data.on上的，这样才能绑定原生事件在子组件的root上
+  data.on = data.nativeOn
+
   mergeHooks(data)
 
   // return a placeholder vnode
@@ -38,7 +46,7 @@ export function createComponent (Ctor, data, context, children, tag) {
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
-    { Ctor, propsData, tag, children }
+    { Ctor, propsData, listeners, tag, children }
   )
   return vnode
 }
@@ -53,6 +61,7 @@ export function createComponentInstanceForVnode (
     _isComponent: true,
     propsData: vnodeComponentOptions.propsData,
     _componentTag: vnodeComponentOptions.tag,
+    _parentListeners: vnodeComponentOptions.listeners, // 声明在孩子组件的v-on:xx其实是父亲的method
     _parentElm: parentElm || null,
     _refElm: refElm || null
   }

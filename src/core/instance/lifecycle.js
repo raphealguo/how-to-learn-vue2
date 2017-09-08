@@ -2,6 +2,7 @@ import patch from 'core/vdom/patch'
 import Watcher from '../observer/watcher'
 import compile from 'compiler/index'
 import { observerState } from '../observer/index'
+import { query } from 'web/util/index'
 import {
   warn,
   noop,
@@ -97,6 +98,13 @@ export function lifecycleMixin (Vue) {
     return mountComponent(this, el)
   }
 
+  Vue.prototype.$forceUpdate = function () {
+    const vm = this
+    if (vm._watcher) { // 强制更新ui
+      vm._watcher.update()
+    }
+  }
+
   Vue.prototype.$destroy = function () {
     const vm = this
     if (vm._isBeingDestroyed) {
@@ -182,23 +190,5 @@ function getOuterHTML (el) {
     const container = document.createElement('div')
     container.appendChild(el.cloneNode(true))
     return container.innerHTML
-  }
-}
-
-/**
- * Query an element selector if it's not an element already.
- */
-function query (el) {
-  if (typeof el === 'string') {
-    const selected = document.querySelector(el)
-    if (!selected) {
-      warn(
-        'Cannot find element: ' + el
-      )
-      return document.createElement('div')
-    }
-    return selected
-  } else {
-    return el
   }
 }

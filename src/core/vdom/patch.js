@@ -1,11 +1,10 @@
-import * as nodeOps from './node-ops'
+import * as nodeOps from 'web/runtime/node-ops'
 import VNode from './vnode'
-import { updateAttrs } from './attrs'
-import { updateClass } from './class'
-import { updateDOMProps } from './dom-props'
-import { updateDOMListeners } from './events'
+import platformModules from 'web/runtime/modules/index'
 
 export const emptyNode = new VNode('', {}, [])
+
+const hooks = ['create', 'update']
 
 function isUndef (s) {
   return s == null
@@ -21,6 +20,19 @@ function sameVnode (vnode1, vnode2) {
     vnode1.tag === vnode2.tag &&
     !vnode1.data === !vnode2.data
   )
+}
+
+// 把所有钩子都放在这里
+let i, j
+const cbs = {}
+
+const modules = platformModules
+
+for (i = 0; i < hooks.length; ++i) {
+  cbs[hooks[i]] = []
+  for (j = 0; j < modules.length; ++j) {
+    if (modules[j][hooks[i]] !== undefined) cbs[hooks[i]].push(modules[j][hooks[i]])
+  }
 }
 
 function createKeyToOldIdx (children, beginIdx, endIdx) {
@@ -57,10 +69,13 @@ function createElm (vnode, parentElm, refElm) {
     createChildren(vnode, children)
 
     // 属性
+    /*
     updateAttrs(emptyNode, vnode)
     updateClass(emptyNode, vnode)
     updateDOMProps(emptyNode, vnode)
     updateDOMListeners(emptyNode, vnode)
+    */
+    invokeCreateHooks(vnode)
 
     insert(parentElm, vnode.elm, refElm)
   } else { // 文本节点
@@ -76,12 +91,26 @@ function createComponent (vnode, parentElm, refElm) {
       i(vnode, parentElm, refElm)
 
       if (isDef(vnode.componentInstance)) {
+        // 绑定事件
+        initComponent(vnode)
         return true
       }
     }
   }
 }
 
+function initComponent (vnode) {
+  vnode.elm = vnode.componentInstance.$el
+  if (isPatchable(vnode)) {
+    /*
+    updateAttrs(emptyNode, vnode)
+    updateClass(emptyNode, vnode)
+    updateDOMProps(emptyNode, vnode)
+    updateDOMListeners(emptyNode, vnode)
+    */
+    invokeCreateHooks(vnode)
+  }
+}
 function insert (parent, elm, ref) {
   if (parent) {
     if (ref) {
@@ -89,6 +118,23 @@ function insert (parent, elm, ref) {
     } else {
       nodeOps.appendChild(parent, elm)
     }
+  }
+}
+
+function isPatchable (vnode) {
+  while (vnode.componentInstance) {
+    vnode = vnode.componentInstance._vnode
+  }
+  return isDef(vnode.tag)
+}
+
+function invokeCreateHooks (vnode) {
+  for (let i = 0; i < cbs.create.length; ++i) {
+    cbs.create[i](emptyNode, vnode)
+  }
+  i = vnode.data.hook // Reuse variable
+  if (isDef(i)) {
+    if (i.create) i.create(emptyNode, vnode)
   }
 }
 
@@ -199,16 +245,18 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   const oldCh = oldVnode.children
   const ch = vnode.children
 
+  if (hasData && isDef(i = data.hook) && isDef(i = i.prepatch)) {
+    i(oldVnode, vnode)
+  }
   // 更新属性
-  if (hasData) {
+  if (hasData && isPatchable(vnode)) {
+    /*
     updateAttrs(oldVnode, vnode)
     updateClass(oldVnode, vnode)
     updateDOMProps(oldVnode, vnode)
     updateDOMListeners(oldVnode, vnode)
-
-    if (hasData && isDef(i = data.hook) && isDef(i = i.prepatch)) {
-      i(oldVnode, vnode)
-    }
+    */
+    for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)
   }
 
   if (isUndef(vnode.text)) {
@@ -235,6 +283,8 @@ export default function patch (oldVnode, vnode, parentElm, refElm) {
   if (!oldVnode) { // 说明之前都没挂在过
     // empty mount (likely as component), create new root element
     isInitialPatch = true
+    // 此时vnode这个自定义组件内部生成的root就是 vnode挂在的elm
+    // 绑定的原生事件就绑在这个elm上
     createElm(vnode, parentElm, refElm)
   } else { // 原来的逻辑
     const isRealElement = isDef(oldVnode.nodeType)
