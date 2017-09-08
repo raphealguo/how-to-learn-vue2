@@ -312,6 +312,7 @@ var Watcher = function () {
   expression: string;
   cb: Function;
   id: number;
+  deep: boolean;
   lazy: boolean;
   dirty: boolean;
   active: boolean;
@@ -331,9 +332,10 @@ var Watcher = function () {
     // options
     // https://cn.vuejs.org/v2/api/#vm-watch-expOrFn-callback-options
     if (options) {
+      this.deep = !!options.deep;
       this.lazy = !!options.lazy; //computed是
     } else {
-      this.lazy = false;
+      this.deep = this.lazy = false;
     }
     this.cb = cb;
     this.id = ++uid; // uid for batching
@@ -377,6 +379,12 @@ var Watcher = function () {
       var value = void 0;
       var vm = this.vm;
       value = this.getter.call(vm, vm);
+
+      // "touch" every property so they are all tracked as
+      // dependencies for deep watching
+      if (this.deep) {
+        traverse(value);
+      }
 
       //结束收集依赖
       (0, _dep.popTarget)();
@@ -458,7 +466,7 @@ var Watcher = function () {
     value: function run() {
       if (this.active) {
         var value = this.get();
-        if (value !== this.value || (0, _index.isObject)(value)) {
+        if (value !== this.value || (0, _index.isObject)(value) || this.deep) {
           // set new value
           var oldValue = this.value;
           this.value = value;
@@ -513,7 +521,49 @@ var Watcher = function () {
   return Watcher;
 }();
 
+/**
+ * Recursively traverse an object to evoke all converted
+ * getters, so that every nested property inside the object
+ * is collected as a "deep" dependency.
+ */
+
+
 exports.default = Watcher;
+var seenObjects = new _index._Set();
+function traverse(val) {
+  // 目的是触发里边所有value的get操作，让外边收集依赖
+  seenObjects.clear();
+  _traverse(val, seenObjects);
+}
+
+function _traverse(val, seen) {
+  var i = void 0,
+      keys = void 0;
+  var isA = Array.isArray(val);
+  if (!isA && !(0, _index.isObject)(val)) {
+    // 只有数组和对象需要递归监听
+    return;
+  }
+  if (val.__ob__) {
+    var depId = val.__ob__.dep.id;
+    if (seen.has(depId)) {
+      return;
+    }
+    seen.add(depId);
+  }
+  if (isA) {
+    i = val.length;
+    while (i--) {
+      _traverse(val[i], seen);
+    }
+  } else {
+    keys = Object.keys(val);
+    i = keys.length;
+    while (i--) {
+      _traverse(val[keys[i]], seen);
+    }
+  }
+}
 
 /***/ }),
 /* 4 */
