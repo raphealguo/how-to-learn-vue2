@@ -18,6 +18,7 @@ export function initGlobalAPI (Vue) {
   Vue.delete = del
 
   Vue.options = Object.create(null)
+  Vue.options.components = Object.create(null)  // 当前vm类所注册的组件名字
 
   initExtend(Vue)
 }

@@ -58,7 +58,7 @@ const normalizeEvent = (name) => {
   }
 }
 
-function updateListeners (on, oldOn) {
+function updateListeners (on, oldOn, vm) {
   let name, cur, old, event
   for (name in on) {
     cur = on[name]
@@ -66,7 +66,8 @@ function updateListeners (on, oldOn) {
     event = normalizeEvent(name)
     if (!cur) { // v-on:click="clickme" 找不到clickme同名方法定义
       warn(
-        `Invalid handler for event "${event.name}": got ` + String(cur)
+        `Invalid handler for event "${event.name}": got ` + String(cur),
+        vm
       )
     } else if (!old) { // 旧vnode没有on此事件
       if (!cur.fns) { // 下次 patch 时就不用重新再包装 listenerCb
@@ -95,5 +96,5 @@ export function updateDOMListeners (oldVnode, vnode) {
   const on = vnode.data.on || {}
   const oldOn = oldVnode.data.on || {}
   target = vnode.elm
-  updateListeners(on, oldOn)
+  updateListeners(on, oldOn, vnode.context)
 }

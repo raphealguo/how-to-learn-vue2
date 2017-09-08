@@ -34,9 +34,15 @@ export function lifecycleMixin (Vue) {
     vm._vnode = vnode
 
     if (!prevVnode) {
-      patch(vm.$el, vnode)
+      // 对于自定义组件来说，_parentElm,_refElm带入patch
+      vm.$el = patch(
+        vm.$el, vnode,
+        vm.$options._parentElm,
+        vm.$options._refElm
+      )
     } else {
-      patch(prevVnode, vnode)
+      // updates
+      vm.$el = patch(prevVnode, vnode)
     }
 
     if (vm._isMounted) {

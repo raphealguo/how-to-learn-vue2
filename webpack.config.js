@@ -3,7 +3,7 @@ var path = require('path')
 module.exports = {
   entry: './src/entries/index.js',
   output: {
-    filename: './dist/v3.2.1.js'
+    filename: './dist/v3.2.2.js'
   },
   module: {
     rules: [

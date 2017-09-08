@@ -155,3 +155,32 @@ export function mergeOptions (parent, child, vm) {
   }
   return options
 }
+
+
+/**
+ * Resolve an asset.
+ * This function is used because child instances need access
+ * to assets defined in its ancestor chain.
+ */
+// 从options里边找到对应的值
+export function resolveAsset (options, type, id, warnMissing) {
+  /* istanbul ignore if */
+  if (typeof id !== 'string') {
+    return
+  }
+
+  // options 有继承关系
+
+  const assets = options[type]
+  // check local registration variations first
+  if (hasOwn(assets, id)) return assets[id]
+  // fallback to prototype chain
+  const res = assets[id]
+  if (warnMissing && !res) {
+    warn(
+      'Failed to resolve ' + type.slice(0, -1) + ': ' + id,
+      options
+    )
+  }
+  return res
+}

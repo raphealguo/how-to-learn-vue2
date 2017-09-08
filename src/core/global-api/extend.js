@@ -1,5 +1,5 @@
 /* @flow */
-import { warn, extend, mergeOptions } from '../util/index'
+import { warn, extend, mergeOptions, isPlainObject } from '../util/index'
 
 export function initExtend (Vue) {
   /**
@@ -25,8 +25,25 @@ export function initExtend (Vue) {
     const Super = this
     const SuperId = Super.cid
 
+    // 缓存起来，避免后续又生成一个新的构造器
+    var cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {});
+    if (cachedCtors[SuperId]) {
+      return cachedCtors[SuperId]
+    }
+
     const Sub = function VueComponent (options) { // see core/indestance/index.js 和Vue构造器逻辑一致
       this._init(options)
+    }
+
+    var name = extendOptions.name || Super.options.name; // 自定义组件的名字
+    {
+      if (!/^[a-zA-Z][\w-]*$/.test(name)) {
+        warn(
+          'Invalid component name: "' + name + '". Component names ' +
+          'can only contain alphanumeric characters and the hyphen, ' +
+          'and must start with a letter.'
+        );
+      }
     }
 
     // 继承
@@ -43,10 +60,26 @@ export function initExtend (Vue) {
     // 子类依旧可以继续生成子类 extend
     Sub.extend = Super.extend
 
+    // enable recursive self-lookup
+    // 把组件名字注册进去
+    if (name) {
+      Sub.options.components[name] = Sub;
+    }
+
     // 防止父类的options有更新，需要在_init的时候再检查一次是否有update
     Sub.superOptions = Super.options
     Sub.extendOptions = extendOptions
 
+    // 缓存起来，避免后续又生成一个新的构造器
+    cachedCtors[SuperId] = Sub;
     return Sub
+  }
+
+
+  Vue.component = function (name, extendOptions) {
+    if (isPlainObject(extendOptions)) {
+      extendOptions.name = extendOptions.name || name
+      Vue.extend(extendOptions)
+    }
   }
 }

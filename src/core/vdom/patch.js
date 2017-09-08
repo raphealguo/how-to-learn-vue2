@@ -3,6 +3,7 @@ import VNode from './vnode'
 import { updateAttrs } from './attrs'
 import { updateClass } from './class'
 import { updateDOMProps } from './dom-props'
+import { initComponentAndMount } from './create-component'
 import { updateDOMListeners } from './events'
 
 export const emptyNode = new VNode('', {}, [])
@@ -45,6 +46,10 @@ function removeNode (el) {
 }
 
 function createElm (vnode, parentElm, refElm) {
+  if (createComponent(vnode, parentElm, refElm)) {// 如果vnode是特殊的自定义组件节点！
+    return
+  }
+
   const children = vnode.children
   const tag = vnode.tag
   if (isDef(tag)) {
@@ -62,6 +67,16 @@ function createElm (vnode, parentElm, refElm) {
   } else { // 文本节点
     vnode.elm = nodeOps.createTextNode(vnode.text)
     insert(parentElm, vnode.elm, refElm)
+  }
+}
+
+function createComponent (vnode, parentElm, refElm) {
+  if (isDef(vnode.componentOptions)) {
+    // 通过 componentOptions 知道他是自定义组件
+    initComponentAndMount(vnode, parentElm, refElm)
+    if (isDef(vnode.componentInstance)) {
+      return true
+    }
   }
 }
 
@@ -205,32 +220,37 @@ function patchVnode (oldVnode, vnode, removeOnly) {
   }
 }
 
-export default function patch (oldVnode, vnode) {
+export default function patch (oldVnode, vnode, parentElm, refElm) {
   if (!vnode) { // 销毁vm的时候 vnode=null
     return
   }
   let isInitialPatch = false
+  if (!oldVnode) { // 说明之前都没挂在过
+    // empty mount (likely as component), create new root element
+    isInitialPatch = true
+    createElm(vnode, parentElm, refElm)
+  } else { // 原来的逻辑
+    const isRealElement = isDef(oldVnode.nodeType)
+    if (!isRealElement && sameVnode(oldVnode, vnode)) {// 如果两个vnode节点根一致
+      patchVnode(oldVnode, vnode)
+    } else {
+      if (isRealElement) {
+        oldVnode = emptyNodeAt(oldVnode)
+      }
+      //既然到了这里 就说明两个vnode的dom的根节点不一样
+      //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
+      //然后把以前的oldVnode全部移除掉
+      const oldElm = oldVnode.elm
+      const parentElm = nodeOps.parentNode(oldElm)
+      createElm(
+        vnode,
+        parentElm,
+        nodeOps.nextSibling(oldElm)
+      )
 
-  const isRealElement = isDef(oldVnode.nodeType)
-  if (!isRealElement && sameVnode(oldVnode, vnode)) {// 如果两个vnode节点根一致
-    patchVnode(oldVnode, vnode)
-  } else {
-    if (isRealElement) {
-      oldVnode = emptyNodeAt(oldVnode)
-    }
-    //既然到了这里 就说明两个vnode的dom的根节点不一样
-    //只是拿到原来的dom的容器parentElm，把当前vnode的所有dom生成进去
-    //然后把以前的oldVnode全部移除掉
-    const oldElm = oldVnode.elm
-    const parentElm = nodeOps.parentNode(oldElm)
-    createElm(
-      vnode,
-      parentElm,
-      nodeOps.nextSibling(oldElm)
-    )
-
-    if (parentElm !== null) {
-      removeVnodes(parentElm, [oldVnode], 0, 0)
+      if (parentElm !== null) {
+        removeVnodes(parentElm, [oldVnode], 0, 0)
+      }
     }
   }
 

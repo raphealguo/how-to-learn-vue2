@@ -15,6 +15,9 @@ import { warn } from 'core/util/debug'
     <button v-on:click.stop="console.log(1)">click me</button>
     <button v-on:click.stop="clickme">click me</button>
     <button v-on:keydown.enter.10="click">click me</button>
+
+    <!-- 自定义组件 -->
+    <my-component></my-component>
   </div>
 
   生成函数：
@@ -63,6 +66,8 @@ import { warn } from 'core/util/debug'
           click($event)
         }}},[_v("click me")])
 
+        //自定义组件
+        _c('my-component')
       ])
     }
   }

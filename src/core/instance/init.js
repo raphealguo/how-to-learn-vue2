@@ -1,4 +1,5 @@
 import { initState } from './state'
+import { initRender } from './render'
 import { initLifecycle, callHook } from './lifecycle'
 import { extend, mergeOptions } from '../util/index'
 
@@ -25,7 +26,7 @@ export function initMixin (Vue) {
     )
 
     initLifecycle(vm)
-
+    initRender(vm)
     callHook(vm, 'beforeCreate')  // see: https://cn.vuejs.org/v2/api/?#beforeCreate
     initState(vm)
     callHook(vm, 'created')       // see: https://cn.vuejs.org/v2/api/?#created
@@ -36,7 +37,7 @@ export function initMixin (Vue) {
   }
 }
 
-function resolveConstructorOptions (Ctor) {
+export function resolveConstructorOptions (Ctor) {
   let options = Ctor.options
   if (Ctor.super) { // 如果有父类
     // 需要把父类的options拿出来 重新merge一下

@@ -2,6 +2,7 @@ import { parseHTML } from './html-parser'
 import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
 import { mustUseProp } from 'core/vdom/attrs'
+import { isPreTag } from 'core/util/element'
 
 export const dirRE = /^v-|^@|^:/
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
@@ -23,8 +24,6 @@ function decode (html) {
   decoder.innerHTML = html
   return decoder.textContent
 }
-
-const isPreTag = (tag) => tag === 'pre'
 
 /**
  * 把HTML字符串转成AST结构
@@ -271,7 +270,7 @@ function processAttrs (el) {
         name = name.replace(modifierRE, '')
       }
 
-      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
+      if (bindRE.test(name)) { // :xxx 开头
         name = name.replace(bindRE, '')
 
         if (mustUseProp(el.tag, el.attrsMap.type, name)) {
