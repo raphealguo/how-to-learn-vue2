@@ -2760,7 +2760,7 @@ function processAttrs(el) {
       }
 
       if (bindRE.test(name)) {
-        // :xxx 开头
+        // :xxx 或者 v-bind:xxx
         name = name.replace(bindRE, '');
 
         if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
