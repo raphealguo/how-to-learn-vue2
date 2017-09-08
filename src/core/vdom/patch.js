@@ -3,7 +3,6 @@ import VNode from './vnode'
 import { updateAttrs } from './attrs'
 import { updateClass } from './class'
 import { updateDOMProps } from './dom-props'
-import { initComponentAndMount } from './create-component'
 import { updateDOMListeners } from './events'
 
 export const emptyNode = new VNode('', {}, [])
@@ -71,11 +70,14 @@ function createElm (vnode, parentElm, refElm) {
 }
 
 function createComponent (vnode, parentElm, refElm) {
-  if (isDef(vnode.componentOptions)) {
-    // 通过 componentOptions 知道他是自定义组件
-    initComponentAndMount(vnode, parentElm, refElm)
-    if (isDef(vnode.componentInstance)) {
-      return true
+  let i = vnode.data
+  if (isDef(i)) {
+    if (isDef(i = i.hook) && isDef(i = i.init)) {
+      i(vnode, parentElm, refElm)
+
+      if (isDef(vnode.componentInstance)) {
+        return true
+      }
     }
   }
 }
@@ -190,6 +192,7 @@ function patchVnode (oldVnode, vnode, removeOnly) {
     return
   }
 
+  let i
   const data = vnode.data
   const hasData = isDef(data)
   const elm = vnode.elm = oldVnode.elm
@@ -202,6 +205,10 @@ function patchVnode (oldVnode, vnode, removeOnly) {
     updateClass(oldVnode, vnode)
     updateDOMProps(oldVnode, vnode)
     updateDOMListeners(oldVnode, vnode)
+
+    if (hasData && isDef(i = data.hook) && isDef(i = i.prepatch)) {
+      i(oldVnode, vnode)
+    }
   }
 
   if (isUndef(vnode.text)) {

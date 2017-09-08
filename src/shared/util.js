@@ -46,6 +46,33 @@ export function hasOwn (obj, key) {
 }
 
 /**
+ * Camelize a hyphen-delimited string.
+ */
+const camelizeRE = /-(\w)/g
+export const camelize = (str) => {
+  return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : '')
+}
+
+/**
+ * Capitalize a string.
+ */
+export const capitalize = (str) => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+/**
+ * Hyphenate a camelCase string.
+ */
+// <div MyProp="">  => <div my-prop="">
+const hyphenateRE = /([^-])([A-Z])/g
+export const hyphenate = (str) => {
+  return str
+    .replace(hyphenateRE, '$1-$2')
+    .replace(hyphenateRE, '$1-$2')
+    .toLowerCase()
+}
+
+/**
  * Simple bind, faster than native
  */
 export function bind (fn, ctx) {

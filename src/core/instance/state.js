@@ -3,7 +3,9 @@ import Watcher from '../observer/watcher'
 import {
   set,
   del,
-  observe
+  observe,
+  defineReactive,
+  observerState,
 } from '../observer/index'
 
 import {
@@ -12,6 +14,7 @@ import {
   isReserved,
   isPlainObject,
   bind,
+  validateProp,
   noop
 } from '../util/index'
 
@@ -36,18 +39,59 @@ export function initState (vm) {
   vm._watchers = []
   const opts = vm.$options
 
+  if (opts.props) initProps(vm, opts.props)
   if (opts.methods) initMethods(vm, opts.methods)
 
   if (opts.data) {
     initData(vm)
   } else {
-    observe(vm._data = {}, vm)
+    observe(vm._data = {}, true /* asRootData */)
   }
 
   if (opts.computed) initComputed(vm, opts.computed)
   if (opts.watch) initWatch(vm, opts.watch)
 }
 
+const isReservedProp = { key: 1 }
+
+function initProps (vm, propsOptions) {
+  const propsData = vm.$options.propsData || {}
+  const props = vm._props = {}
+
+  const keys = vm.$options._propKeys = []
+  for (const key in propsOptions) {
+    keys.push(key)
+    // 获取&校验属性的值，同时订阅
+
+    // propsOptions 为组件定义的时候props的声明
+    // propsData 是_c() 在runtime从父亲传递过来的数据
+    const value = validateProp(key, propsOptions, propsData, vm)
+    if (isReservedProp[key]) { // 保留的关键字 ["key"] 不允许用key做props
+      warn(
+        `"${key}" is a reserved attribute and cannot be used as component prop.`,
+        vm
+      )
+    }
+    defineReactive(props, key, value, () => {
+      if (!observerState.isSettingProps) { // 在update 孩子vm时，父亲的data变化引起的props变化 不应该出warning
+        warn(
+          `Avoid mutating a prop directly since the value will be ` +
+          `overwritten whenever the parent component re-renders. ` +
+          `Instead, use a data or computed property based on the prop's ` +
+          `value. Prop being mutated: "${key}"`,
+          vm
+        )
+      }
+    })
+
+    // static props are already proxied on the component's prototype
+    // during Vue.extend(). We only need to proxy props defined at
+    // instantiation here.
+    if (!(key in vm)) { // 把propsOptions的key 代理到vm._prop上
+      proxy(vm, `_props`, key)
+    }
+  }
+}
 
 function initData (vm) {
   let data = vm.$options.data
@@ -69,7 +113,13 @@ function initData (vm) {
   const props = vm.$options.props
   let i = keys.length
   while (i--) {
-    if (!isReserved(keys[i])) { // vm._xx vm.$xxx 都是vm的内部/外部方法，所以不能代理到data上
+    if (props && hasOwn(props, keys[i])) {
+      warn(
+        `The data property "${keys[i]}" is already declared as a prop. ` +
+        `Use prop default value instead.`,
+        vm
+      )
+    } else if (!isReserved(keys[i])) { // vm._xx vm.$xxx 都是vm的内部/外部方法，所以不能代理到data上
       proxy(vm, `_data`, keys[i]) // 把 vm.abc 代理到 vm._data.abc
     }
   }

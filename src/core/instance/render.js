@@ -1,5 +1,6 @@
 import { _toString } from '../util/index'
-import { createTextVNode, createElementVNode, createEmptyVNode } from '../vdom/vnode'
+import { createTextVNode, createEmptyVNode } from '../vdom/vnode'
+import { createElementVNode } from '../vdom/create-element'
 
 import { renderList } from './render-helpers/render-list'
 import { checkKeyCodes } from './render-helpers/check-keycodes'

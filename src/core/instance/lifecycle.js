@@ -1,10 +1,12 @@
 import patch from 'core/vdom/patch'
 import Watcher from '../observer/watcher'
 import compile from 'compiler/index'
+import { observerState } from '../observer/index'
 import {
   warn,
   noop,
   remove,
+  validateProp,
 } from '../util/index'
 
 const idToTemplate = (id) => {
@@ -149,6 +151,28 @@ function mountComponent (vm, el) {
   vm._isMounted = true
   callHook(vm, 'mounted') // see: https://cn.vuejs.org/v2/api/?#mounted
   return vm
+}
+
+// 当当前子组件的props改变的时候，这里会重新触发vm._props写操作
+// 由于在state.js里边initProps做了订阅 defineReactive(props, key, value)
+// 因此会触发子组件的vm._watcher update，从而触发子组件update
+export function updateChildComponent (vm, propsData) {
+  // update props
+  if (propsData && vm.$options.props) {
+    // 在下边props[key] = xx的时候 会对孩子的props进行赋值，但是这次赋值是允许的，不应该出warning
+    // 是父亲的data改变 引起 孩子的prop变化
+    // 所以在这个过程中保持  observerState.isSettingProps = true
+    observerState.isSettingProps = true
+    const props = vm._props
+    const propKeys = vm.$options._propKeys || []
+    for (let i = 0; i < propKeys.length; i++) {
+      const key = propKeys[i]
+      props[key] = validateProp(key, vm.$options.props, propsData, vm)
+    }
+    observerState.isSettingProps = false
+    // keep a copy of raw propsData
+    vm.$options.propsData = propsData
+  }
 }
 
 function getOuterHTML (el) {

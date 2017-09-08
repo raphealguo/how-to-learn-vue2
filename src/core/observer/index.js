@@ -10,6 +10,10 @@ import {
 
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 
+export const observerState = {
+  isSettingProps: false
+}
+
 /*
 
   computed : {
@@ -126,7 +130,7 @@ export function observe (value) {
   return ob
 }
 
-export function defineReactive (obj, key, val) {
+export function defineReactive (obj, key, val, customSetter) {
   const dep = new Dep()
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
@@ -172,8 +176,16 @@ export function defineReactive (obj, key, val) {
         return
       }
 
+      if (customSetter) {
+        customSetter()
+      }
+
+      if (setter) {
+        setter.call(obj, newVal)
+      } else {
+        val = newVal
+      }
       // console.log("newVal = ", newVal)
-      val = newVal
 
       childOb = observe(newVal)
       dep.notify()
