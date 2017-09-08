@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 34);
+/******/ 	return __webpack_require__(__webpack_require__.s = 35);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -109,6 +109,18 @@ Object.keys(_env).forEach(function (key) {
     enumerable: true,
     get: function get() {
       return _env[key];
+    }
+  });
+});
+
+var _options = __webpack_require__(27);
+
+Object.keys(_options).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _options[key];
     }
   });
 });
@@ -274,10 +286,286 @@ function warn(msg, vm) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.Observer = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _dep = __webpack_require__(8);
+exports.observe = observe;
+exports.defineReactive = defineReactive;
+exports.set = set;
+exports.del = del;
+
+var _dep = __webpack_require__(9);
+
+var _dep2 = _interopRequireDefault(_dep);
+
+var _array = __webpack_require__(24);
+
+var _index = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var arrayKeys = Object.getOwnPropertyNames(_array.arrayMethods);
+
+/*
+
+  computed : {
+    m: function(){
+      return this.a + this.b
+    },
+    n: function(){
+      return this.a + this.c
+    },
+    x: function(){
+      return this.a + this.b + this.c
+    }
+  }
+
+  DepA.subs = [WatcherM, WatcherN, WatcherX]
+  DepB.subs = [WatcherM, WatcherX]
+  DepC.subs = [WatcherN, WatcherX]
+
+  WatcherM.deps = [DepA, DepB]
+  WatcherN.deps = [DepA, DepC]
+  WatcherX.deps = [DepA, DepB, DepC]
+
+  当getA发生的时候，需要通过 depend 添加WatcherM/WatcherN/WatcherX的依赖deps, WatcherN.subs.push()
+  当setA发生的时候，需要通过 notify 广播 DepA.subs，让他们通知对应的watcher
+
+ */
+
+var Observer = exports.Observer = function () {
+  /*
+  value: any;
+  dep: Dep;
+  */
+  function Observer(value) {
+    _classCallCheck(this, Observer);
+
+    this.value = value;
+    this.dep = new _dep2.default();
+    (0, _index.def)(value, '__ob__', this); // 把当前Observer对象 绑定在value.__ob__上
+
+    // 将value深度遍历，订阅里边所有值的get set
+    if (Array.isArray(value)) {
+      // 由于数组原生的push/shift等方法也是写操作
+      // 需要在这里勾住
+      var augment = _index.hasProto ? protoAugment : copyAugment;
+      augment(value, _array.arrayMethods, arrayKeys);
+      this.observeArray(value);
+    } else {
+      this.walk(value);
+    }
+  }
+
+  /**
+   * Walk through each property and convert them into
+   * getter/setters. This method should only be called when
+   * value type is Object.
+   */
+
+
+  _createClass(Observer, [{
+    key: 'walk',
+    value: function walk(obj) {
+      var keys = Object.keys(obj);
+      for (var i = 0; i < keys.length; i++) {
+        defineReactive(obj, keys[i], obj[keys[i]]);
+      }
+    }
+
+    /**
+     * Observe a list of Array items.
+     */
+
+  }, {
+    key: 'observeArray',
+    value: function observeArray(items) {
+      for (var i = 0, l = items.length; i < l; i++) {
+        observe(items[i]);
+      }
+    }
+  }]);
+
+  return Observer;
+}();
+
+// helpers
+
+/**
+ * Augment an target Object or Array by intercepting
+ * the prototype chain using __proto__
+ */
+
+
+function protoAugment(target, src) {
+  /* eslint-disable no-proto */
+  target.__proto__ = src;
+  /* eslint-enable no-proto */
+}
+
+/**
+ * Augment an target Object or Array by defining
+ * hidden properties.
+ */
+/* istanbul ignore next */
+function copyAugment(target, src, keys) {
+  for (var i = 0, l = keys.length; i < l; i++) {
+    var key = keys[i];
+    (0, _index.def)(target, key, src[key]);
+  }
+}
+
+function observe(value) {
+  if (!(0, _index.isObject)(value)) {
+    return;
+  }
+
+  var ob = void 0;
+  if ((0, _index.hasOwn)(value, '__ob__') && value.__ob__ instanceof Observer) {
+    ob = value.__ob__;
+  } else if ((Array.isArray(value) || (0, _index.isPlainObject)(value)) && !value._isVue // vm对象不作订阅
+  ) {
+      ob = new Observer(value);
+    }
+
+  return ob;
+}
+
+function defineReactive(obj, key, val) {
+  var dep = new _dep2.default();
+
+  var property = Object.getOwnPropertyDescriptor(obj, key);
+  if (property && property.configurable === false) {
+    return;
+  }
+
+  // cater for pre-defined getter/setters
+  var getter = property && property.get;
+  var setter = property && property.set;
+
+  var childOb = observe(val);
+  /*
+      m: function(){
+      return this.a + this.b
+    },
+      当getA发生的时候，需要通过 depend 添加WatcherM/WatcherN/WatcherX的依赖deps, WatcherN.subs.push()
+    当setA发生的时候，需要通过 notify 广播 DepA.subs，让他们通知对应的watcher
+  */
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter() {
+      var value = getter ? getter.call(obj) : val;
+      if (_dep2.default.target) {
+        // getA发生的时候，Dep.target == DepM
+        dep.depend();
+        if (childOb) {
+          childOb.dep.depend();
+        }
+        if (Array.isArray(value)) {
+          dependArray(value);
+        }
+      }
+      return val;
+    },
+    set: function reactiveSetter(newVal) {
+      var value = val;
+
+      if (newVal === value) {
+        return;
+      }
+
+      // console.log("newVal = ", newVal)
+      val = newVal;
+
+      childOb = observe(newVal);
+      dep.notify();
+
+      // vm._update at core/instance/index.js
+    }
+  });
+}
+
+/**
+ * Set a property on an object. Adds the new property and
+ * triggers change notification if the property doesn't
+ * already exist.
+ */
+function set(obj, key, val) {
+  if (Array.isArray(obj)) {
+    obj.length = Math.max(obj.length, key);
+    obj.splice(key, 1, val);
+    return val;
+  }
+  if ((0, _index.hasOwn)(obj, key)) {
+    obj[key] = val;
+    return;
+  }
+  var ob = obj.__ob__;
+  if (!ob) {
+    // 不是订阅对象，直接set了返回
+    obj[key] = val;
+    return;
+  }
+  // 递归订阅set进去的value
+  // ob.value 可以认为就是 obj
+  defineReactive(ob.value, key, val);
+
+  // set操作要notify deps
+  ob.dep.notify();
+  return val;
+}
+
+/**
+ * Delete a property and trigger change if necessary.
+ */
+function del(obj, key) {
+  if (Array.isArray(obj)) {
+    obj.splice(key, 1);
+    return;
+  }
+  var ob = obj.__ob__;
+  if (!(0, _index.hasOwn)(obj, key)) {
+    return;
+  }
+  delete obj[key];
+  if (!ob) {
+    return;
+  }
+  ob.dep.notify();
+}
+
+/**
+ * Collect dependencies on array elements when the array is touched, since
+ * we cannot intercept array element access like property getters.
+ */
+function dependArray(value) {
+  for (var e, i = 0, l = value.length; i < l; i++) {
+    e = value[i];
+    e && e.__ob__ && e.__ob__.dep.depend();
+    if (Array.isArray(e)) {
+      dependArray(e);
+    }
+  }
+}
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _dep = __webpack_require__(9);
 
 var _dep2 = _interopRequireDefault(_dep);
 
@@ -577,7 +865,7 @@ function _traverse(val, seen) {
 }
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -590,7 +878,7 @@ exports.createEmptyVNode = undefined;
 exports.createElementVNode = createElementVNode;
 exports.createTextVNode = createTextVNode;
 
-var _index = __webpack_require__(30);
+var _index = __webpack_require__(31);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -630,7 +918,7 @@ function createTextVNode(val) {
 }
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -668,7 +956,7 @@ function compile(template) {
 }
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -681,15 +969,15 @@ exports.initLifecycle = initLifecycle;
 exports.lifecycleMixin = lifecycleMixin;
 exports.callHook = callHook;
 
-var _patch = __webpack_require__(33);
+var _patch = __webpack_require__(34);
 
 var _patch2 = _interopRequireDefault(_patch);
 
-var _watcher = __webpack_require__(3);
+var _watcher = __webpack_require__(4);
 
 var _watcher2 = _interopRequireDefault(_watcher);
 
-var _index = __webpack_require__(5);
+var _index = __webpack_require__(6);
 
 var _index2 = _interopRequireDefault(_index);
 
@@ -863,7 +1151,7 @@ function query(el) {
 }
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -876,11 +1164,11 @@ exports.proxy = proxy;
 exports.initState = initState;
 exports.stateMixin = stateMixin;
 
-var _watcher = __webpack_require__(3);
+var _watcher = __webpack_require__(4);
 
 var _watcher2 = _interopRequireDefault(_watcher);
 
-var _index = __webpack_require__(9);
+var _index = __webpack_require__(3);
 
 var _index2 = __webpack_require__(0);
 
@@ -921,10 +1209,13 @@ function initState(vm) {
 
 function initData(vm) {
   var data = vm.$options.data;
-  data = vm._data = data || {}; // 把 data 所有属性代理到 vm._data 上
+  // 把 data 所有属性代理到 vm._data 上
+  // data可以是一个函数：组件的data不应该是静态的obj，应该是一个function，避免组件共享同一个data
+  data = vm._data = typeof data === 'function' ? data.call(vm) : data || {};
 
   if (!(0, _index2.isPlainObject)(data)) {
     data = {};
+    (0, _index2.warn)('data functions should return an object:\n' + 'https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function', vm);
   }
   var keys = Object.keys(data);
   var props = vm.$options.props;
@@ -973,6 +1264,9 @@ function initWatch(vm, watch) {
   for (var key in watch) {
     var handler = watch[key];
     if (Array.isArray(handler)) {
+      // 为什么这里会是数组
+      // Sub = Vue.extend({ watch: {a:funcA }}), subvm = new Sub({ watch: {a:funcB })
+      // 最终subvm的options.watch = { "a": [funcA, funcB] }
       for (var i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i]);
       }
@@ -1014,7 +1308,7 @@ function stateMixin(Vue) {
 }
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1029,7 +1323,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 exports.pushTarget = pushTarget;
 exports.popTarget = popTarget;
 
-var _watcher = __webpack_require__(3);
+var _watcher = __webpack_require__(4);
 
 var _watcher2 = _interopRequireDefault(_watcher);
 
@@ -1135,282 +1429,6 @@ function pushTarget(_target) {
 
 function popTarget() {
   Dep.target = targetStack.pop();
-}
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Observer = undefined;
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-exports.observe = observe;
-exports.defineReactive = defineReactive;
-exports.set = set;
-exports.del = del;
-
-var _dep = __webpack_require__(8);
-
-var _dep2 = _interopRequireDefault(_dep);
-
-var _array = __webpack_require__(24);
-
-var _index = __webpack_require__(0);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var arrayKeys = Object.getOwnPropertyNames(_array.arrayMethods);
-
-/*
-
-  computed : {
-    m: function(){
-      return this.a + this.b
-    },
-    n: function(){
-      return this.a + this.c
-    },
-    x: function(){
-      return this.a + this.b + this.c
-    }
-  }
-
-  DepA.subs = [WatcherM, WatcherN, WatcherX]
-  DepB.subs = [WatcherM, WatcherX]
-  DepC.subs = [WatcherN, WatcherX]
-
-  WatcherM.deps = [DepA, DepB]
-  WatcherN.deps = [DepA, DepC]
-  WatcherX.deps = [DepA, DepB, DepC]
-
-  当getA发生的时候，需要通过 depend 添加WatcherM/WatcherN/WatcherX的依赖deps, WatcherN.subs.push()
-  当setA发生的时候，需要通过 notify 广播 DepA.subs，让他们通知对应的watcher
-
- */
-
-var Observer = exports.Observer = function () {
-  /*
-  value: any;
-  dep: Dep;
-  */
-  function Observer(value) {
-    _classCallCheck(this, Observer);
-
-    this.value = value;
-    this.dep = new _dep2.default();
-    (0, _index.def)(value, '__ob__', this); // 把当前Observer对象 绑定在value.__ob__上
-
-    // 将value深度遍历，订阅里边所有值的get set
-    if (Array.isArray(value)) {
-      // 由于数组原生的push/shift等方法也是写操作
-      // 需要在这里勾住
-      var augment = _index.hasProto ? protoAugment : copyAugment;
-      augment(value, _array.arrayMethods, arrayKeys);
-      this.observeArray(value);
-    } else {
-      this.walk(value);
-    }
-  }
-
-  /**
-   * Walk through each property and convert them into
-   * getter/setters. This method should only be called when
-   * value type is Object.
-   */
-
-
-  _createClass(Observer, [{
-    key: 'walk',
-    value: function walk(obj) {
-      var keys = Object.keys(obj);
-      for (var i = 0; i < keys.length; i++) {
-        defineReactive(obj, keys[i], obj[keys[i]]);
-      }
-    }
-
-    /**
-     * Observe a list of Array items.
-     */
-
-  }, {
-    key: 'observeArray',
-    value: function observeArray(items) {
-      for (var i = 0, l = items.length; i < l; i++) {
-        observe(items[i]);
-      }
-    }
-  }]);
-
-  return Observer;
-}();
-
-// helpers
-
-/**
- * Augment an target Object or Array by intercepting
- * the prototype chain using __proto__
- */
-
-
-function protoAugment(target, src) {
-  /* eslint-disable no-proto */
-  target.__proto__ = src;
-  /* eslint-enable no-proto */
-}
-
-/**
- * Augment an target Object or Array by defining
- * hidden properties.
- */
-/* istanbul ignore next */
-function copyAugment(target, src, keys) {
-  for (var i = 0, l = keys.length; i < l; i++) {
-    var key = keys[i];
-    (0, _index.def)(target, key, src[key]);
-  }
-}
-
-function observe(value) {
-  if (!(0, _index.isObject)(value)) {
-    return;
-  }
-
-  var ob = void 0;
-  if ((0, _index.hasOwn)(value, '__ob__') && value.__ob__ instanceof Observer) {
-    ob = value.__ob__;
-  } else if ((Array.isArray(value) || (0, _index.isPlainObject)(value)) && !value._isVue // vm对象不作订阅
-  ) {
-      ob = new Observer(value);
-    }
-
-  return ob;
-}
-
-function defineReactive(obj, key, val) {
-  var dep = new _dep2.default();
-
-  var property = Object.getOwnPropertyDescriptor(obj, key);
-  if (property && property.configurable === false) {
-    return;
-  }
-
-  // cater for pre-defined getter/setters
-  var getter = property && property.get;
-  var setter = property && property.set;
-
-  var childOb = observe(val);
-  /*
-      m: function(){
-      return this.a + this.b
-    },
-      当getA发生的时候，需要通过 depend 添加WatcherM/WatcherN/WatcherX的依赖deps, WatcherN.subs.push()
-    当setA发生的时候，需要通过 notify 广播 DepA.subs，让他们通知对应的watcher
-  */
-  Object.defineProperty(obj, key, {
-    enumerable: true,
-    configurable: true,
-    get: function reactiveGetter() {
-      var value = getter ? getter.call(obj) : val;
-      if (_dep2.default.target) {
-        // getA发生的时候，Dep.target == DepM
-        dep.depend();
-        if (childOb) {
-          childOb.dep.depend();
-        }
-        if (Array.isArray(value)) {
-          dependArray(value);
-        }
-      }
-      return val;
-    },
-    set: function reactiveSetter(newVal) {
-      var value = val;
-
-      if (newVal === value) {
-        return;
-      }
-
-      // console.log("newVal = ", newVal)
-      val = newVal;
-
-      childOb = observe(newVal);
-      dep.notify();
-
-      // vm._update at core/instance/index.js
-    }
-  });
-}
-
-/**
- * Set a property on an object. Adds the new property and
- * triggers change notification if the property doesn't
- * already exist.
- */
-function set(obj, key, val) {
-  if (Array.isArray(obj)) {
-    obj.length = Math.max(obj.length, key);
-    obj.splice(key, 1, val);
-    return val;
-  }
-  if ((0, _index.hasOwn)(obj, key)) {
-    obj[key] = val;
-    return;
-  }
-  var ob = obj.__ob__;
-  if (!ob) {
-    // 不是订阅对象，直接set了返回
-    obj[key] = val;
-    return;
-  }
-  // 递归订阅set进去的value
-  // ob.value 可以认为就是 obj
-  defineReactive(ob.value, key, val);
-
-  // set操作要notify deps
-  ob.dep.notify();
-  return val;
-}
-
-/**
- * Delete a property and trigger change if necessary.
- */
-function del(obj, key) {
-  if (Array.isArray(obj)) {
-    obj.splice(key, 1);
-    return;
-  }
-  var ob = obj.__ob__;
-  if (!(0, _index.hasOwn)(obj, key)) {
-    return;
-  }
-  delete obj[key];
-  if (!ob) {
-    return;
-  }
-  ob.dep.notify();
-}
-
-/**
- * Collect dependencies on array elements when the array is touched, since
- * we cannot intercept array element access like property getters.
- */
-function dependArray(value) {
-  for (var e, i = 0, l = value.length; i < l; i++) {
-    e = value[i];
-    e && e.__ob__ && e.__ob__.dep.depend();
-    if (Array.isArray(e)) {
-      dependArray(e);
-    }
-  }
 }
 
 /***/ }),
@@ -1631,11 +1649,11 @@ exports.generate = generate;
 
 var _events = __webpack_require__(12);
 
-var _index = __webpack_require__(5);
+var _index = __webpack_require__(6);
 
 var _index2 = _interopRequireDefault(_index);
 
-var _vnode = __webpack_require__(4);
+var _vnode = __webpack_require__(5);
 
 var _vnode2 = _interopRequireDefault(_vnode);
 
@@ -2487,8 +2505,9 @@ function processAttrs(el) {
       }
 
       if (bindRE.test(name)) {
-        // :xxx 开头
+        // :xxx 或者 v-bind:xxx
         name = name.replace(bindRE, '');
+
         if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value);
         } else {
@@ -2666,7 +2685,7 @@ function initExtend(Vue) {
         Sub.cid = cid++;
 
         // 把默认的extendOptions和父亲的options merge之后 记录在当前的构造器上，等真正 _init调用的时候再动态merge options
-        Sub.options = (0, _index.extend)(Super.options, extendOptions);
+        Sub.options = (0, _index.mergeOptions)(Super.options, extendOptions);
 
         // 记录基类
         Sub['super'] = Super;
@@ -2696,7 +2715,7 @@ exports.initGlobalAPI = initGlobalAPI;
 
 var _extend = __webpack_require__(17);
 
-var _index = __webpack_require__(9);
+var _index = __webpack_require__(3);
 
 var _index2 = __webpack_require__(0);
 
@@ -2730,11 +2749,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _init = __webpack_require__(20);
 
-var _state = __webpack_require__(7);
+var _state = __webpack_require__(8);
 
 var _render = __webpack_require__(23);
 
-var _lifecycle = __webpack_require__(6);
+var _lifecycle = __webpack_require__(7);
 
 var _index = __webpack_require__(0);
 
@@ -2760,67 +2779,67 @@ exports.default = Vue;
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 exports.initMixin = initMixin;
 
-var _state = __webpack_require__(7);
+var _state = __webpack_require__(8);
 
-var _lifecycle = __webpack_require__(6);
+var _lifecycle = __webpack_require__(7);
 
 var _index = __webpack_require__(0);
 
 var uid = 0;
 
 function initMixin(Vue) {
-    Vue.prototype._init = function (options) {
-        var vm = this;
-        var template = options.template;
+  Vue.prototype._init = function (options) {
+    var vm = this;
+    var template = options.template;
 
-        vm._uid = uid++;
+    vm._uid = uid++;
 
-        // a flag to avoid this being observed
-        // 避免 vm对象 被注入订阅
-        vm._isVue = true;
+    // a flag to avoid this being observed
+    // 避免 vm对象 被注入订阅
+    vm._isVue = true;
 
-        // merge options
-        // 针对: Sub = Vue.extend(options1); subvm = new Sub(options2);
-        // 需要merge静态的 options1 和动态的 options2 到 subvm 上
-        vm.$options = (0, _index.extend)(resolveConstructorOptions(vm.constructor), options || {});
+    // merge options
+    // 针对: Sub = Vue.extend(options1); subvm = new Sub(options2);
+    // 需要merge静态的 options1 和动态的 options2 到 subvm 上
+    vm.$options = (0, _index.mergeOptions)(resolveConstructorOptions(vm.constructor), options || {}, vm);
 
-        (0, _lifecycle.initLifecycle)(vm);
+    (0, _lifecycle.initLifecycle)(vm);
 
-        (0, _lifecycle.callHook)(vm, 'beforeCreate'); // see: https://cn.vuejs.org/v2/api/?#beforeCreate
-        (0, _state.initState)(vm);
-        (0, _lifecycle.callHook)(vm, 'created'); // see: https://cn.vuejs.org/v2/api/?#created
+    (0, _lifecycle.callHook)(vm, 'beforeCreate'); // see: https://cn.vuejs.org/v2/api/?#beforeCreate
+    (0, _state.initState)(vm);
+    (0, _lifecycle.callHook)(vm, 'created'); // see: https://cn.vuejs.org/v2/api/?#created
 
-        if (vm.$options.el) {
-            vm.$mount(vm.$options.el);
-        }
-    };
+    if (vm.$options.el) {
+      vm.$mount(vm.$options.el);
+    }
+  };
 }
 
 function resolveConstructorOptions(Ctor) {
-    var options = Ctor.options;
-    if (Ctor.super) {
-        // 如果有父类
-        // 需要把父类的options拿出来 重新merge一下
-        var superOptions = resolveConstructorOptions(Ctor.super);
-        var cachedSuperOptions = Ctor.superOptions;
+  var options = Ctor.options;
+  if (Ctor.super) {
+    // 如果有父类
+    // 需要把父类的options拿出来 重新merge一下
+    var superOptions = resolveConstructorOptions(Ctor.super);
+    var cachedSuperOptions = Ctor.superOptions;
 
-        // 对比一下看看父类的options有没有做过更新
-        if (superOptions !== cachedSuperOptions) {
-            // 如果有更新过
-            // super option changed,
-            // need to resolve new options.
-            // 更新一下cache options
-            Ctor.superOptions = superOptions;
+    // 对比一下看看父类的options有没有做过更新
+    if (superOptions !== cachedSuperOptions) {
+      // 如果有更新过
+      // super option changed,
+      // need to resolve new options.
+      // 更新一下cache options
+      Ctor.superOptions = superOptions;
 
-            // 重新merge一下options
-            options = Ctor.options = (0, _index.extend)(superOptions, Ctor.extendOptions);
-        }
+      // 重新merge一下options
+      options = Ctor.options = (0, _index.mergeOptions)(superOptions, Ctor.extendOptions);
     }
-    return options;
+  }
+  return options;
 }
 
 /***/ }),
@@ -2911,7 +2930,7 @@ exports.renderMixin = renderMixin;
 
 var _index = __webpack_require__(0);
 
-var _vnode = __webpack_require__(4);
+var _vnode = __webpack_require__(5);
 
 var _renderList = __webpack_require__(22);
 
@@ -3109,6 +3128,159 @@ function parsePath(path) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.mergeOptions = mergeOptions;
+
+var _debug = __webpack_require__(2);
+
+var _index = __webpack_require__(3);
+
+var _util = __webpack_require__(1);
+
+var strats = Object.create(null);
+
+strats.el = function (parent, child, vm, key) {
+  if (!vm) {
+    (0, _debug.warn)('option "' + key + '" can only be used during instance ' + 'creation with the `new` keyword.');
+  }
+  return defaultStrat(parent, child);
+};
+
+/**
+ * Helper that recursively merges two data objects together.
+ */
+function mergeData(to, from) {
+  if (!from) return to;
+  var key = void 0,
+      toVal = void 0,
+      fromVal = void 0;
+  var keys = Object.keys(from);
+  for (var i = 0; i < keys.length; i++) {
+    key = keys[i];
+    toVal = to[key];
+    fromVal = from[key];
+    if (!(0, _util.hasOwn)(to, key)) {
+      (0, _index.set)(to, key, fromVal);
+    } else if ((0, _util.isPlainObject)(toVal) && (0, _util.isPlainObject)(fromVal)) {
+      mergeData(toVal, fromVal);
+    }
+  }
+  return to;
+}
+
+/**
+ * Data
+ */
+strats.data = function (parentVal, childVal, vm) {
+  if (!vm) {
+    // Vue.extend(options) 时候进入此分支merge
+    if (!childVal) {
+      return parentVal;
+    }
+    if (typeof childVal !== 'function') {
+      // Vue.extend的options.data必须是一个函数
+      (0, _debug.warn)('The "data" option should be a function ' + 'that returns a per-instance value in component ' + 'definitions.', vm);
+      return parentVal;
+    }
+    if (!parentVal) {
+      return childVal;
+    }
+    // 返回依旧是一个 data()
+    // 组件共享了同一个 data，所以需要data工厂方法来生成不同的data
+    return function mergedDataFn() {
+      return mergeData(childVal.call(this), parentVal.call(this));
+    };
+  } else if (parentVal || childVal) {
+    // new Sub(option1) 的时候会mergeOption进入此分支merge
+    return function mergedInstanceDataFn() {
+      // instance merge
+      var instanceData = typeof childVal === 'function' ? childVal.call(vm) : childVal;
+      var defaultData = typeof parentVal === 'function' ? parentVal.call(vm) : undefined;
+      if (instanceData) {
+        return mergeData(instanceData, defaultData);
+      } else {
+        return defaultData;
+      }
+    };
+  }
+};
+
+/**
+ * Watchers.
+ *
+ * Watchers hashes should not overwrite one
+ * another, so we merge them as arrays.
+ */
+// 需要把watcher都合并到一起
+strats.watch = function (parentVal, childVal) {
+  /* istanbul ignore if */
+  if (!childVal) return Object.create(parentVal || null);
+  if (!parentVal) return childVal;
+  var ret = {};
+  (0, _util.extend)(ret, parentVal);
+  for (var key in childVal) {
+    var parent = ret[key];
+    var child = childVal[key];
+    if (parent && !Array.isArray(parent)) {
+      parent = [parent];
+    }
+    ret[key] = parent ? parent.concat(child) : [child];
+  }
+  return ret;
+};
+
+/**
+ * Other object hashes.
+ */
+strats.methods = strats.computed = function (parentVal, childVal) {
+  if (!childVal) return Object.create(parentVal || null);
+  if (!parentVal) return childVal;
+  var ret = Object.create(null);
+  (0, _util.extend)(ret, parentVal);
+  (0, _util.extend)(ret, childVal);
+  return ret;
+};
+
+/**
+ * Default strategy.
+ */
+var defaultStrat = function defaultStrat(parentVal, childVal) {
+  return childVal === undefined ? parentVal : childVal;
+};
+
+/**
+ * Merge two option objects into a new one.
+ * Core utility used in both instantiation and inheritance.
+ */
+function mergeOptions(parent, child, vm) {
+
+  var options = {};
+  var key = void 0;
+  for (key in parent) {
+    mergeField(key);
+  }
+  for (key in child) {
+    if (!(0, _util.hasOwn)(parent, key)) {
+      mergeField(key);
+    }
+  }
+  function mergeField(key) {
+    // 特殊的key需要特殊的拷贝方法 拷贝方法放置在strats里边
+    var strat = strats[key] || defaultStrat;
+    options[key] = strat(parent[key], child[key], vm, key);
+  }
+  return options;
+}
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.updateClass = updateClass;
 
 var _util = __webpack_require__(1);
@@ -3187,7 +3359,7 @@ function stringifyClass(value) {
 }
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3219,7 +3391,7 @@ function updateDOMProps(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3332,7 +3504,7 @@ function updateDOMListeners(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3342,7 +3514,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _normalizeChildren = __webpack_require__(31);
+var _normalizeChildren = __webpack_require__(32);
 
 Object.keys(_normalizeChildren).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -3355,7 +3527,7 @@ Object.keys(_normalizeChildren).forEach(function (key) {
 });
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3378,7 +3550,7 @@ function simpleNormalizeChildren(children) {
 }
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3445,7 +3617,7 @@ function setAttribute(node, key, val) {
 }
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3457,21 +3629,21 @@ Object.defineProperty(exports, "__esModule", {
 exports.emptyNode = undefined;
 exports.default = patch;
 
-var _nodeOps = __webpack_require__(32);
+var _nodeOps = __webpack_require__(33);
 
 var nodeOps = _interopRequireWildcard(_nodeOps);
 
-var _vnode = __webpack_require__(4);
+var _vnode = __webpack_require__(5);
 
 var _vnode2 = _interopRequireDefault(_vnode);
 
 var _attrs = __webpack_require__(10);
 
-var _class = __webpack_require__(27);
+var _class = __webpack_require__(28);
 
-var _domProps = __webpack_require__(28);
+var _domProps = __webpack_require__(29);
 
-var _events = __webpack_require__(29);
+var _events = __webpack_require__(30);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3707,7 +3879,7 @@ function patch(oldVnode, vnode) {
 }
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
