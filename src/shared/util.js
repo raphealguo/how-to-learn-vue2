@@ -63,6 +63,16 @@ export function bind (fn, ctx) {
 }
 
 /**
+ * Mix properties into target object.
+ */
+export function extend (to, _from) {
+  for (const key in _from) {
+    to[key] = _from[key]
+  }
+  return to
+}
+
+/**
  * Quick object check - this is primarily used to tell
  * Objects from primitive values when we know the value
  * is a JSON-compliant type.

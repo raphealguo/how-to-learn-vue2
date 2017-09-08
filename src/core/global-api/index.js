@@ -1,11 +1,9 @@
+import { initExtend } from './extend'
+import { set, del } from '../observer/index'
+
 import {
   warn,
 } from '../util/index'
-
-import {
-  set,
-  del,
-} from '../observer/index'
 
 export function initGlobalAPI (Vue) {
 
@@ -18,4 +16,8 @@ export function initGlobalAPI (Vue) {
 
   Vue.set = set
   Vue.delete = del
+
+  Vue.options = Object.create(null)
+
+  initExtend(Vue)
 }

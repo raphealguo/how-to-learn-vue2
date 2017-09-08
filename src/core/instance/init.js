@@ -1,5 +1,6 @@
 import { initState } from './state'
 import { initLifecycle, callHook } from './lifecycle'
+import { extend } from '../util/index'
 
 let uid = 0
 
@@ -14,7 +15,10 @@ export function initMixin (Vue) {
     // 避免 vm对象 被注入订阅
     vm._isVue = true
 
-    vm.$options = options
+    // merge options
+    // 针对: Sub = Vue.extend(options1); subvm = new Sub(options2);
+    // 需要merge静态的 options1 和动态的 options2 到 subvm 上
+    vm.$options = extend(resolveConstructorOptions(vm.constructor), options || {})
 
     initLifecycle(vm)
 
@@ -26,5 +30,25 @@ export function initMixin (Vue) {
       vm.$mount(vm.$options.el)
     }
   }
+}
 
+function resolveConstructorOptions (Ctor) {
+  let options = Ctor.options
+  if (Ctor.super) { // 如果有父类
+    // 需要把父类的options拿出来 重新merge一下
+    const superOptions = resolveConstructorOptions(Ctor.super)
+    const cachedSuperOptions = Ctor.superOptions
+
+    // 对比一下看看父类的options有没有做过更新
+    if (superOptions !== cachedSuperOptions) { // 如果有更新过
+      // super option changed,
+      // need to resolve new options.
+      // 更新一下cache options
+      Ctor.superOptions = superOptions
+
+      // 重新merge一下options
+      options = Ctor.options = extend(superOptions, Ctor.extendOptions)
+    }
+  }
+  return options
 }
