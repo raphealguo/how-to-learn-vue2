@@ -1389,7 +1389,7 @@ function initState(vm) {
   if (opts.data) {
     initData(vm);
   } else {
-    (0, _index.observe)(vm._data = {}, true /* asRootData */);
+    (0, _index.observe)(vm._data = {}, vm);
   }
 
   if (opts.computed) initComputed(vm, opts.computed);
@@ -2767,8 +2767,9 @@ function processAttrs(el) {
       }
 
       if (bindRE.test(name)) {
-        // :xxx 开头
+        // :xxx 或者 v-bind:xxx
         name = name.replace(bindRE, '');
+
         if ((0, _attrs.mustUseProp)(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value);
         } else {

@@ -45,7 +45,7 @@ export function initState (vm) {
   if (opts.data) {
     initData(vm)
   } else {
-    observe(vm._data = {}, true /* asRootData */)
+    observe(vm._data = {}, vm)
   }
 
   if (opts.computed) initComputed(vm, opts.computed)
