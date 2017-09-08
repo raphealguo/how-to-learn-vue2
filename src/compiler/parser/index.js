@@ -67,6 +67,7 @@ export function parse (template) {
       processIf(element)
       processKey(element)
 
+      processRef(element)
       processSlot(element)
       processClass(element)
       processAttrs(element)
@@ -152,6 +153,14 @@ function processKey (el) {
   const exp = getBindingAttr(el, 'key')
   if (exp) {
     el.key = exp
+  }
+}
+
+function processRef (el) {
+  const ref = getBindingAttr(el, 'ref')
+  if (ref) {
+    el.ref = ref
+    el.refInFor = checkInFor(el)
   }
 }
 
@@ -369,6 +378,17 @@ function addHandler (el, name, value, modifiers) {
   } else {
     events[name] = newHandler
   }
+}
+
+function checkInFor (el) {
+  let parent = el
+  while (parent) {
+    if (parent.for !== undefined) {
+      return true
+    }
+    parent = parent.parent
+  }
+  return false
 }
 
 function parseModifiers (name) {

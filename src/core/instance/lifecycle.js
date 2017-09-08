@@ -11,12 +11,30 @@ import {
   validateProp,
 } from '../util/index'
 
+export let activeInstance = null  // 当前正在处理的vm对象
+
 const idToTemplate = (id) => {
   const el = query(id)
   return el && el.innerHTML
 }
 
 export function initLifecycle (vm) {
+  const options = vm.$options
+
+  // locate first non-abstract parent
+  let parent = options.parent
+  if (parent) {
+    while (parent.$parent) {
+      parent = parent.$parent
+    }
+    parent.$children.push(vm)
+  }
+  vm.$parent = parent
+  vm.$root = parent ? parent.$root : vm
+
+  vm.$children = []
+  vm.$refs = {}
+
   vm._watcher = null
   vm._isMounted = false
   vm._isDestroyed = false
@@ -34,7 +52,9 @@ export function lifecycleMixin (Vue) {
 
     const vnode = vm._render()
     const prevVnode = vm._vnode
+    const prevActiveInstance = activeInstance
 
+    activeInstance = vm
     vm._vnode = vnode
 
     if (!prevVnode) {
@@ -47,6 +67,12 @@ export function lifecycleMixin (Vue) {
     } else {
       // updates
       vm.$el = patch(prevVnode, vnode)
+    }
+    activeInstance = prevActiveInstance //恢复指向
+
+    // if parent is an HOC, update its $el as well
+    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+      vm.$parent.$el = vm.$el
     }
 
     if (vm._isMounted) {
@@ -113,6 +139,11 @@ export function lifecycleMixin (Vue) {
     }
     callHook(vm, 'beforeDestroy')
     vm._isBeingDestroyed = true
+    // remove self from parent
+    const parent = vm.$parent
+    if (parent && !parent._isBeingDestroyed) {
+      remove(parent.$children, vm)
+    }
 
     // teardown watchers
     if (vm._watcher) {
@@ -126,6 +157,8 @@ export function lifecycleMixin (Vue) {
     // call the last hook...
     vm._isDestroyed = true
     callHook(vm, 'destroyed')
+    // turn off all instance listeners.
+    vm.$off()
 
     // invoke destroy hooks on current rendered tree
     patch(vm._vnode, null)

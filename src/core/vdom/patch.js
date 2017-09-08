@@ -1,6 +1,7 @@
 import * as nodeOps from 'web/runtime/node-ops'
 import VNode from './vnode'
 import platformModules from 'web/runtime/modules/index'
+import { registerRef } from './modules/ref'
 
 export const emptyNode = new VNode('', {}, [])
 
@@ -113,6 +114,8 @@ function initComponent (vnode) {
     updateDOMListeners(emptyNode, vnode)
     */
     invokeCreateHooks(vnode)
+  } else {
+    registerRef(vnode)
   }
 }
 function insert (parent, elm, ref) {

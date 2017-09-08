@@ -163,6 +163,13 @@ function genData (el) {
   if (el.key) {
     data += `key:${el.key},`
   }
+  // ref
+  if (el.ref) {
+    data += `ref:${el.ref},`
+  }
+  if (el.refInFor) {
+    data += `refInFor:true,`
+  }
   if (el.attrs) {
     data += `attrs:{${genProps(el.attrs)}},`
   }

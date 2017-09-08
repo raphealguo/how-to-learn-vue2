@@ -1,6 +1,6 @@
 import VNode from './vnode'
 import { resolveConstructorOptions } from '../instance/init'
-import { updateChildComponent } from '../instance/lifecycle'
+import { updateChildComponent, activeInstance } from '../instance/lifecycle'
 import {
   warn,
   isObject,
@@ -53,12 +53,14 @@ export function createComponent (Ctor, data, context, children, tag) {
 
 export function createComponentInstanceForVnode (
   vnode,
+  parent,
   parentElm,
   refElm
 ) {
   const vnodeComponentOptions = vnode.componentOptions
   const options = {
     _isComponent: true,
+    parent,
     propsData: vnodeComponentOptions.propsData,
     _componentTag: vnodeComponentOptions.tag,
     _parentVnode: vnode,
@@ -83,6 +85,7 @@ export function init (vnode, parentElm, refElm) {
   if (!vnode.componentInstance || vnode.componentInstance._isDestroyed) {
     const child = vnode.componentInstance = createComponentInstanceForVnode(
       vnode,
+      activeInstance,
       parentElm,
       refElm
     )
