@@ -206,6 +206,9 @@ function patchVnode (oldVnode, vnode, removeOnly) {
 }
 
 export default function patch (oldVnode, vnode) {
+  if (!vnode) { // 销毁vm的时候 vnode=null
+    return
+  }
   let isInitialPatch = false
 
   const isRealElement = isDef(oldVnode.nodeType)

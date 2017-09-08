@@ -1,3 +1,19 @@
+import Watcher from '../observer/watcher'
+
+import {
+  set,
+  del,
+  observe
+} from '../observer/index'
+
+import {
+  warn,
+  hasOwn,
+  isReserved,
+  isPlainObject,
+  bind,
+  noop
+} from '../util/index'
 
 const sharedPropertyDefinition = {
   enumerable: true,
@@ -25,10 +41,11 @@ export function initState (vm) {
   if (opts.data) {
     initData(vm)
   } else {
-    observe(vm._data = {}, vm)
+    observe(vm._data = {}, true /* asRootData */)
   }
 
   if (opts.computed) initComputed(vm, opts.computed)
+  if (opts.watch) initWatch(vm, opts.watch)
 }
 
 
@@ -49,22 +66,6 @@ function initData (vm) {
   }
   observe(data, this)
 }
-import Watcher from '../observer/watcher'
-
-import {
-  set,
-  del,
-  observe
-} from '../observer/index'
-
-import {
-  warn,
-  hasOwn,
-  isReserved,
-  isPlainObject,
-  bind,
-  noop
-} from '../util/index'
 
 function initComputed (vm, computed) {
   for (const key in computed) {
@@ -92,6 +93,31 @@ function initMethods (vm, methods) {
   for (const key in methods) {
     vm[key] = methods[key] == null ? noop : bind(methods[key], vm)
   }
+}
+
+function initWatch (vm, watch) {
+  for (const key in watch) {
+    const handler = watch[key]
+    if (Array.isArray(handler)) {
+      for (let i = 0; i < handler.length; i++) {
+        createWatcher(vm, key, handler[i])
+      }
+    } else {
+      createWatcher(vm, key, handler)
+    }
+  }
+}
+
+function createWatcher (vm, key, handler) {
+  let options
+  if (isPlainObject(handler)) {
+    options = handler
+    handler = handler.handler
+  }
+  if (typeof handler === 'string') {
+    handler = vm[handler]
+  }
+  vm.$watch(key, handler, options)
 }
 
 export function stateMixin (Vue) {

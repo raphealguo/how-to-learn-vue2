@@ -271,9 +271,8 @@ function processAttrs (el) {
         name = name.replace(modifierRE, '')
       }
 
-      if (bindRE.test(name)) { // :xxx 或者 v-bind:xxx
+      if (bindRE.test(name)) { // :xxx 开头
         name = name.replace(bindRE, '')
-
         if (mustUseProp(el.tag, el.attrsMap.type, name)) {
           addProp(el, name, value)
         } else {
